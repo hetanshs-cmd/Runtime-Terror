@@ -1,20 +1,16 @@
-# GovConnect
+# gov_connect
 
-## Description
-A brief description of the project goes here.
+A new Flutter project.
 
 ## Getting Started
-Instructions for setting up and running the project.
 
-## Collaborators
-- [Hetansh Sutaria](https://github.com/hetanshs-cmd) (Team Leader)
-- [Kunal Pundhir](https://github.com/augustbeyondinfinity)
-- [Krish Pundhir](https://github.com/Charlie199KO)
-- [Kush Kelaiya](https://github.com/Kush-Kelaiya22)
-- [Tanish Shah](https://github.com/tanishshahhh)
+This project is a starting point for a Flutter application.
 
-## License
-Add license information here.
+A few resources to get you started if this is your first Flutter project:
 
-## Contributing
-Guidelines for contributing to this project.
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
