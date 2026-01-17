@@ -4,31 +4,22 @@ import { HeartPulse, Sprout, Building2, TrendingUp, TrendingDown, Minus } from '
 
 const DomainStatus: React.FC = () => {
   const domains = [
-    { 
-      name: 'Healthcare', 
-      icon: HeartPulse, 
-      color: 'rose', 
+    {
+      name: 'Healthcare',
+      icon: HeartPulse,
+      color: 'rose',
       metrics: [
         { label: 'Hospitals Active', value: '42,802', trend: 'up' },
         { label: 'Overload Risk', value: 'LOW', trend: 'down' }
       ]
     },
-    { 
-      name: 'Agriculture', 
-      icon: Sprout, 
-      color: 'emerald', 
+    {
+      name: 'Agriculture',
+      icon: Sprout,
+      color: 'emerald',
       metrics: [
         { label: 'Weather Alerts', value: '14 Active', trend: 'up' },
         { label: 'Advisory Reach', value: '82%', trend: 'up' }
-      ]
-    },
-    { 
-      name: 'Urban / Smart City', 
-      icon: Building2, 
-      color: 'indigo', 
-      metrics: [
-        { label: 'Utility Stress', value: 'MED', trend: 'none' },
-        { label: 'Complaint Load', value: 'Low Vol', trend: 'down' }
       ]
     },
   ];

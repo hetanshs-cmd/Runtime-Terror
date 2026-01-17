@@ -7,8 +7,8 @@ SESSION_TYPE = 'filesystem'  # Can be changed to 'redis' for production
 
 # Database Configuration
 MYSQL_HOST = 'localhost'
-MYSQL_USER = 'govconnect'
-MYSQL_PASSWORD = 'govconnect123'
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = 'Soul#13211993'
 MYSQL_DB = 'govconnect'
 MYSQL_PORT = 3306
 
@@ -32,4 +32,4 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS = 7     # 7 days
 
 # Server Configuration
 HOST = '0.0.0.0'
-PORT = 5000
+PORT = 5001

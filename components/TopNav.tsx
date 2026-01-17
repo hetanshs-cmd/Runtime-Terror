@@ -56,10 +56,10 @@ const TopNav: React.FC<TopNavProps> = ({ sidebarOpen, setSidebarOpen, isMobile, 
 
         <button className={`flex items-center gap-2 p-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
           <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold text-sm">
-            {user?.fullName?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'A'}
+            {user?.username?.charAt(0).toUpperCase() || 'A'}
           </div>
           <div className="hidden md:block">
-            <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-black'}`}>{user?.fullName || user?.username || 'Admin'}</p>
+            <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-black'}`}>{user?.username || 'Admin'}</p>
           </div>
         </button>
 

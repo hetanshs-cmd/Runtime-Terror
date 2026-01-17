@@ -1,17 +1,18 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  HeartPulse, 
-  Sprout, 
-  Building2, 
-  Bell, 
-  Activity, 
+import {
+  LayoutDashboard,
+  HeartPulse,
+  Sprout,
+  Building2,
+  Bell,
+  Activity,
   Settings,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -20,19 +21,34 @@ interface SidebarProps {
   isMobile: boolean;
   isDark: boolean;
   onMobileClose?: () => void;
+  user?: any;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, onMobileClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, onMobileClose, user }) => {
   const location = useLocation();
 
   const menuItems = [
     { id: 'home', path: '/', icon: LayoutDashboard, label: 'Home' },
     { id: 'healthcare', path: '/healthcare', icon: HeartPulse, label: 'Healthcare' },
     { id: 'agriculture', path: '/agriculture', icon: Sprout, label: 'Agriculture' },
-    { id: 'urban', path: '/urban', icon: Building2, label: 'Urban / Smart City' },
     { id: 'alerts', path: '/alerts', icon: Bell, label: 'Alerts' },
     { id: 'system-health', path: '/system-health', icon: Activity, label: 'System Health' },
   ];
+
+  // Add hospital registration for healthcare admin, admin, and super admin only
+  if (user && (user.role === 'healthcare_admin' || user.role === 'admin' || user.role === 'super_admin')) {
+    menuItems.splice(2, 0, { id: 'hospital-registration', path: '/hospital-registration', icon: Building2, label: 'Register Hospital' });
+  }
+
+  // Add farmer registration for agriculture admin, admin, and super admin only
+  if (user && (user.role === 'agriculture_admin' || user.role === 'admin' || user.role === 'super_admin')) {
+    menuItems.splice(3, 0, { id: 'farmer-registration', path: '/farmer-registration', icon: Sprout, label: 'Register Farmer' });
+  }
+
+  // Add admin menu item for admin and super_admin users
+  if (user && (user.role === 'admin' || user.role === 'super_admin')) {
+    menuItems.push({ id: 'admin', path: '/admin', icon: Shield, label: 'User Management' });
+  }
 
   const sidebarClasses = `
     fixed top-0 left-0 h-full ${isDark ? 'bg-gray-800 border-r border-gray-700' : 'bg-gray-100 border-r border-gray-300'} 
@@ -66,11 +82,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, 
               key={item.id}
               to={item.path}
               onClick={() => isMobile && onMobileClose && onMobileClose()}
-              className={`w-full flex items-center gap-3 px-3 py-2 mb-1 rounded ${
-                location.pathname === item.path 
-                  ? `${isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}` 
-                  : `${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`
-              }`}
+              className={`w-full flex items-center gap-3 px-3 py-2 mb-1 rounded ${location.pathname === item.path
+                ? `${isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+                : `${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`
+                }`}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
               {(isOpen || isMobile) && <span className="text-sm">{item.label}</span>}
@@ -80,12 +95,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, 
 
         {/* Footer Actions */}
         <div className={`p-2 ${isDark ? 'border-t border-gray-700' : 'border-t border-gray-300'}`}>
-          <button className={`w-full flex items-center gap-3 px-3 py-2 rounded ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`}>
+          <Link
+            to="/settings"
+            onClick={() => isMobile && onMobileClose && onMobileClose()}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded ${location.pathname === '/settings'
+              ? `${isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+              : `${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-200'}`
+              }`}
+          >
             <Settings className="w-5 h-5 flex-shrink-0" />
             {(isOpen || isMobile) && <span className="text-sm">Settings</span>}
-          </button>
+          </Link>
           {!isMobile && (
-            <button 
+            <button
               onClick={() => setIsOpen(!isOpen)}
               className={`w-full flex items-center justify-center p-2 mt-2 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'}`}
             >

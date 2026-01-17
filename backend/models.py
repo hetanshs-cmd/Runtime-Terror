@@ -14,7 +14,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     full_name = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), default='user')  # 'user' or 'admin'
+    role = db.Column(db.String(30), default='user')  # 'user', 'admin', 'healthcare_admin', 'agriculture_admin', 'super_admin'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -145,33 +145,70 @@ def get_session_by_refresh_token(refresh_token):
     ).first()
 
 class Hospital(db.Model):
-    __tablename__ = 'hospitals'
+    __tablename__ = 'hospital'
 
-    id = db.Column(db.Integer, primary_key=True)
+    hospital_id = db.Column(db.String(100), primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    location = db.Column(db.String(200), nullable=False)
-    hospital_type = db.Column(db.String(50), nullable=False)  # e.g., 'general', 'specialty', 'clinic'
-    num_rooms = db.Column(db.Integer, default=0)
-    num_doctors = db.Column(db.Integer, default=0)
-    num_nurses = db.Column(db.Integer, default=0)
-    capacity = db.Column(db.Integer, default=0)
-    phone = db.Column(db.String(20))
-    email = db.Column(db.String(120))
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(100), nullable=False)
+    type = db.Column(db.String(20), nullable=False)  # 'government' or 'private'
+    
+    # Additional fields for comprehensive hospital registration
+    address = db.Column(db.Text, nullable=True)
+    pincode = db.Column(db.String(10), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(120), nullable=True)
+    website = db.Column(db.String(200), nullable=True)
+    emergency_contact = db.Column(db.String(20), nullable=True)
+    
+    # Capacity information
+    total_beds = db.Column(db.Integer, nullable=True)
+    icu_beds = db.Column(db.Integer, nullable=True)
+    emergency_beds = db.Column(db.Integer, nullable=True)
+    
+    # Medical specialties (stored as JSON)
+    specialties = db.Column(db.Text, nullable=True)  # JSON array of specialties
+    facilities = db.Column(db.Text, nullable=True)   # JSON array of facilities
+    
+    # Director information
+    director_name = db.Column(db.String(200), nullable=True)
+    director_phone = db.Column(db.String(20), nullable=True)
+    director_email = db.Column(db.String(120), nullable=True)
+    
+    # Additional information
+    established_year = db.Column(db.Integer, nullable=True)
+    accreditation = db.Column(db.String(200), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
+        import json
         return {
-            'id': self.id,
+            'id': self.hospital_id,  # Use hospital_id as id for frontend compatibility
+            'hospitalId': self.hospital_id,
             'name': self.name,
-            'location': self.location,
-            'hospitalType': self.hospital_type,
-            'numRooms': self.num_rooms,
-            'numDoctors': self.num_doctors,
-            'numNurses': self.num_nurses,
-            'capacity': self.capacity,
+            'city': self.city,
+            'state': self.state,
+            'type': self.type,
+            'address': self.address,
+            'pincode': self.pincode,
             'phone': self.phone,
             'email': self.email,
+            'website': self.website,
+            'emergencyContact': self.emergency_contact,
+            'totalBeds': self.total_beds,
+            'icuBeds': self.icu_beds,
+            'emergencyBeds': self.emergency_beds,
+            'specialties': json.loads(self.specialties) if self.specialties else [],
+            'facilities': json.loads(self.facilities) if self.facilities else [],
+            'directorName': self.director_name,
+            'directorPhone': self.director_phone,
+            'directorEmail': self.director_email,
+            'establishedYear': self.established_year,
+            'accreditation': self.accreditation,
+            'description': self.description,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -179,29 +216,102 @@ class Hospital(db.Model):
 class Farmer(db.Model):
     __tablename__ = 'farmers'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
+    farmer_name = db.Column(db.String(200), primary_key=True)  # Using farmer_name as primary key since no id column
+    mobile_number = db.Column(db.String(20), nullable=False)
     location = db.Column(db.String(200), nullable=False)
-    area_plot = db.Column(db.Float, nullable=False)  # in acres/hectares
-    crop_type = db.Column(db.String(100))
-    irrigation_type = db.Column(db.String(50))
-    phone = db.Column(db.String(20))
-    email = db.Column(db.String(120))
-    farm_size_category = db.Column(db.String(20))  # 'small', 'medium', 'large'
+    land_area = db.Column(db.Float, nullable=False)  # in acres/hectares
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.farmer_name,  # Use farmer_name as id for frontend compatibility
+            'farmerName': self.farmer_name,
+            'mobileNumber': self.mobile_number,
+            'location': self.location,
+            'landArea': self.land_area,
+            'createdAt': self.created_at.isoformat() if self.created_at else None,
+            'updatedAt': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class Doctor(db.Model):
+    __tablename__ = 'doctors'
+
+    dr_name = db.Column(db.String(200), primary_key=True)  # Using dr_name as primary key since no id column
+    hospital_id = db.Column(db.String(100), nullable=False)
+    gender = db.Column(db.String(20), nullable=False)
+    time = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.dr_name,  # Use dr_name as id for frontend compatibility
+            'drName': self.dr_name,
+            'hospitalId': self.hospital_id,
+            'gender': self.gender,
+            'time': self.time,
+            'createdAt': self.created_at.isoformat() if self.created_at else None,
+            'updatedAt': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class Appointment(db.Model):
+    __tablename__ = 'appointments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    patient_name = db.Column(db.String(200), nullable=False)
+    patient_email = db.Column(db.String(120), nullable=False)
+    patient_phone = db.Column(db.String(20), nullable=False)
+    hospital_id = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+    doctor_name = db.Column(db.String(200), nullable=True)  # Optional doctor preference
+    appointment_date = db.Column(db.Date, nullable=False)
+    appointment_time = db.Column(db.Time, nullable=False)
+    symptoms = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default='scheduled')  # scheduled, confirmed, completed, cancelled
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
         return {
             'id': self.id,
-            'name': self.name,
-            'location': self.location,
-            'areaPlot': self.area_plot,
-            'cropType': self.crop_type,
-            'irrigationType': self.irrigation_type,
-            'phone': self.phone,
-            'email': self.email,
-            'farmSizeCategory': self.farm_size_category,
+            'patientName': self.patient_name,
+            'patientEmail': self.patient_email,
+            'patientPhone': self.patient_phone,
+            'hospitalId': self.hospital_id,
+            'department': self.department,
+            'doctorName': self.doctor_name,
+            'appointmentDate': self.appointment_date.isoformat() if self.appointment_date else None,
+            'appointmentTime': self.appointment_time.isoformat() if self.appointment_time else None,
+            'symptoms': self.symptoms,
+            'status': self.status,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class Alert(db.Model):
+    __tablename__ = 'alerts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(50), nullable=False)  # 'Healthcare', 'Agriculture', 'System', etc.
+    message = db.Column(db.Text, nullable=False)
+    severity = db.Column(db.String(20), nullable=False)  # 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Relationship
+    creator = db.relationship('User', backref='alerts')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'message': self.message,
+            'severity': self.severity,
+            'createdBy': self.created_by,
+            'createdAt': self.created_at.isoformat() if self.created_at else None,
+            'updatedAt': self.updated_at.isoformat() if self.updated_at else None,
+            'isActive': self.is_active
         }

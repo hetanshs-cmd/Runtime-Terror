@@ -6,7 +6,6 @@ import { HealthStatus } from '../types';
 const services = [
   { name: 'Healthcare API', status: HealthStatus.HEALTHY, latency: '42ms', uptime: '99.99%' },
   { name: 'Agriculture API', status: HealthStatus.HEALTHY, latency: '85ms', uptime: '99.95%' },
-  { name: 'Urban Smart City API', status: HealthStatus.DEGRADED, latency: '320ms', uptime: '98.5%' },
   { name: 'Finance Gateway', status: HealthStatus.HEALTHY, latency: '12ms', uptime: '99.99%' },
   { name: 'Identity Service', status: HealthStatus.HEALTHY, latency: '24ms', uptime: '99.99%' },
 ];
@@ -18,7 +17,7 @@ const APIHealthMonitor: React.FC = () => {
         <Activity className="w-4 h-4" />
         API Cluster Health
       </h3>
-      
+
       <div className="space-y-3">
         {services.map((svc) => (
           <div key={svc.name} className="flex items-center justify-between p-3 bg-slate-950/50 rounded-xl border border-white/5 hover:border-slate-700 transition-all">
@@ -32,7 +31,7 @@ const APIHealthMonitor: React.FC = () => {
               )}
               <span className="text-sm font-medium text-slate-300">{svc.name}</span>
             </div>
-            
+
             <div className="flex items-center gap-4 text-xs">
               <div className="text-right">
                 <p className="text-slate-500">Latency</p>

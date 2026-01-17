@@ -178,8 +178,62 @@ Frontend runs on `http://localhost:3000`
 
 ## Test Credentials
 
+The application automatically creates the following test accounts on startup:
+
+### Super Administrator (Full System Access)
+- **Username**: `superadmin`
+- **Password**: `super123`
+- **Role**: Super Admin - Can create/manage all users, hospitals, doctors, farmers
+
+### System Administrators (User Management)
 - **Username**: `admin`
-- **Password**: `admin`
+- **Password**: `admin123`
+- **Role**: Admin - Can manage users and system settings
+- **Username**: `admin2`
+- **Password**: `admin123`
+- **Role**: Admin - Can manage users and system settings
+
+### Healthcare Administrators
+- **Username**: `healthadmin`
+- **Password**: `health123`
+- **Role**: Healthcare Admin - Can manage hospitals and doctors
+- **Username**: `healthadmin2`
+- **Password**: `health123`
+- **Role**: Healthcare Admin - Can manage hospitals and doctors
+
+### Agriculture Administrators
+- **Username**: `agriadmin`
+- **Password**: `agri123`
+- **Role**: Agriculture Admin - Can manage farmers and agriculture data
+- **Username**: `agriadmin2`
+- **Password**: `agri123`
+- **Role**: Agriculture Admin - Can manage farmers and agriculture data
+
+### Regular Users
+- **Username**: `user`
+- **Password**: `user123`
+- **Role**: Regular User - Basic access to view services
+- **Username**: `demo_user1`
+- **Password**: `demo123`
+- **Role**: Regular User - Basic access to view services
+- **Username**: `demo_user2`
+- **Password**: `demo123`
+- **Role**: Regular User - Basic access to view services
+- **Username**: `demo_user3`
+- **Password**: `demo123`
+- **Role**: Regular User - Basic access to view services
+- **Username**: `farmer1`
+- **Password**: `farmer123`
+- **Role**: Regular User - Basic access to view services
+- **Username**: `farmer2`
+- **Password**: `farmer123`
+- **Role**: Regular User - Basic access to view services
+- **Username**: `doctor1`
+- **Password**: `doctor123`
+- **Role**: Regular User - Basic access to view services
+- **Username**: `doctor2`
+- **Password**: `doctor123`
+- **Role**: Regular User - Basic access to view services
 
 Or register a new account at the login page.
 

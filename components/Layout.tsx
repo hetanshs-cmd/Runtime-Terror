@@ -5,9 +5,12 @@ import TopNav from './TopNav';
 import HomePage from '../pages/HomePage';
 import HealthcarePage from '../pages/HealthcarePage';
 import AgriculturePage from '../pages/AgriculturePage';
-import UrbanPage from '../pages/UrbanPage';
 import AlertsPage from '../pages/AlertsPage';
 import SystemHealthPage from '../pages/SystemHealthPage';
+import AdminPage from '../pages/AdminPage';
+import HospitalRegistrationPage from '../pages/HospitalRegistrationPage';
+import FarmerRegistrationPage from '../pages/FarmerRegistrationPage';
+import Settings from './Settings';
 
 interface LayoutProps {
   isDark: boolean;
@@ -54,6 +57,7 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
         isMobile={isMobile}
         isDark={isDark}
         onMobileClose={handleMobileClose}
+        user={user}
       />
 
       <div className={`flex-1 flex flex-col ${!isMobile ? (sidebarOpen ? 'ml-64' : 'ml-16') : 'ml-0'}`}>
@@ -73,9 +77,12 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
               <Route path="/" element={<HomePage isDark={isDark} />} />
               <Route path="/healthcare" element={<HealthcarePage isDark={isDark} user={user} />} />
               <Route path="/agriculture" element={<AgriculturePage isDark={isDark} user={user} />} />
-              <Route path="/urban" element={<UrbanPage isDark={isDark} />} />
               <Route path="/alerts" element={<AlertsPage isDark={isDark} />} />
               <Route path="/system-health" element={<SystemHealthPage isDark={isDark} />} />
+              <Route path="/admin" element={<AdminPage isDark={isDark} user={user} />} />
+              <Route path="/hospital-registration" element={<HospitalRegistrationPage isDark={isDark} user={user} />} />
+              <Route path="/farmer-registration" element={<FarmerRegistrationPage isDark={isDark} user={user} />} />
+              <Route path="/settings" element={<Settings isDark={isDark} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

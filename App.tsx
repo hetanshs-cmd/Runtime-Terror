@@ -7,7 +7,6 @@ import Login from './components/Login';
 import HomePage from './pages/HomePage';
 import HealthcarePage from './pages/HealthcarePage';
 import AgriculturePage from './pages/AgriculturePage';
-import UrbanPage from './pages/UrbanPage';
 import AlertsPage from './pages/AlertsPage';
 import SystemHealthPage from './pages/SystemHealthPage';
 

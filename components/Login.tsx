@@ -20,6 +20,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isDark = true, onThemeChange }) 
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [error, setError] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const [showTestCredentials, setShowTestCredentials] = useState(false);
 
 	const API_BASE_URL = '/api';
 
@@ -350,6 +351,79 @@ const Login: React.FC<LoginProps> = ({ onLogin, isDark = true, onThemeChange }) 
 						)}
 					</button>
 				</form>
+
+				{/* Test Credentials Section */}
+				<div className="mt-6 border-t pt-4">
+					<button
+						type="button"
+						onClick={() => setShowTestCredentials(!showTestCredentials)}
+						className={`w-full text-left text-sm font-medium mb-2 flex items-center justify-between ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-700'}`}
+					>
+						<span>Test Credentials</span>
+						<span className={`transform transition-transform ${showTestCredentials ? 'rotate-180' : ''}`}>▼</span>
+					</button>
+
+					{showTestCredentials && (
+						<div className={`space-y-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+							<div className="grid grid-cols-1 gap-2">
+								{/* Super Admin */}
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Super Admin:</strong> superadmin / super123
+								</div>
+
+								{/* System Admins */}
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>System Admin:</strong> admin / admin123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>System Admin 2:</strong> admin2 / admin123
+								</div>
+
+								{/* Healthcare Admins */}
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Healthcare Admin:</strong> healthadmin / health123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Healthcare Admin 2:</strong> healthadmin2 / health123
+								</div>
+
+								{/* Agriculture Admins */}
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Agriculture Admin:</strong> agriadmin / agri123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Agriculture Admin 2:</strong> agriadmin2 / agri123
+								</div>
+
+								{/* Regular Users */}
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Regular User:</strong> user / user123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Demo User 1:</strong> demo_user1 / demo123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Demo User 2:</strong> demo_user2 / demo123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Demo User 3:</strong> demo_user3 / demo123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Farmer 1:</strong> farmer1 / farmer123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Farmer 2:</strong> farmer2 / farmer123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Doctor 1:</strong> doctor1 / doctor123
+								</div>
+								<div className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+									<strong>Doctor 2:</strong> doctor2 / doctor123
+								</div>
+							</div>
+						</div>
+					)}
+				</div>
 
 				<div className="mt-6 text-center">
 					<p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

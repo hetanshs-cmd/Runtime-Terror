@@ -10,13 +10,13 @@ interface AgricultureSectorProps {
 }
 
 interface Farmer {
-  id: number;
-  name: string;
+  id: string;
+  farmerName: string;
+  mobileNumber: string;
   location: string;
-  area_plot: number;
-  crop_types: string;
-  contact_number?: string;
-  registration_date: string;
+  landArea: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const cropData = [
@@ -32,11 +32,10 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('');
   const [newFarmer, setNewFarmer] = useState({
-    name: '',
+    farmerName: '',
+    mobileNumber: '',
     location: '',
-    area_plot: 0,
-    crop_types: '',
-    contact_number: ''
+    landArea: 0
   });
 
   useEffect(() => {
@@ -86,7 +85,7 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
         body: JSON.stringify(newFarmer),
       });
       if (response.ok) {
-        setNewFarmer({ name: '', location: '', area_plot: 0, crop_types: '', contact_number: '' });
+        setNewFarmer({ farmerName: '', mobileNumber: '', location: '', landArea: 0 });
         fetchFarmers(); // Refresh the list
       }
     } catch (error) {
@@ -110,7 +109,7 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KPICard title="Farmers Registered" value={farmers.length.toString()} trend="+4.2%" icon={Users} color="emerald" isDark={isDark} />
-        <KPICard title="Cultivation Area" value={`${farmers.reduce((sum, f) => sum + f.area_plot, 0)} ha`} trend="+0.5%" icon={Sprout} color="indigo" isDark={isDark} />
+        <KPICard title="Cultivation Area" value={`${farmers.reduce((sum, f) => sum + f.landArea, 0).toFixed(3)} ha`} trend="+0.5%" icon={Sprout} color="indigo" isDark={isDark} />
         <KPICard title="Active Alerts" value="14" trend="-2" icon={CloudRain} color="blue" isDark={isDark} />
       </div>
 
@@ -135,14 +134,14 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {farmers.map((farmer) => (
                   <div key={farmer.id} className={`p-3 ${isDark ? 'bg-gray-900 border-gray-600' : 'bg-white border-gray-300'} border rounded`}>
-                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-black'}`}>{farmer.name}</h4>
+                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-black'}`}>{farmer.farmerName}</h4>
                     <p className={`text-sm flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       <MapPin className="w-3 h-3" />
                       {farmer.location}
                     </p>
                     <div className="flex items-center gap-4 mt-1 text-xs">
-                      <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{farmer.area_plot} ha</span>
-                      <span className={`px-2 py-1 rounded bg-green-100 text-green-800`}>{farmer.crop_types}</span>
+                      <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{farmer.landArea.toFixed(3)} ha</span>
+                      <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{farmer.mobileNumber}</span>
                     </div>
                   </div>
                 ))}
@@ -186,7 +185,7 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
           </div>
 
           {/* Admin Form for Adding Farmers */}
-          {userRole === 'admin' && (
+          {(userRole === 'admin' || userRole === 'agriculture_admin' || userRole === 'super_admin') && (
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-300'} border rounded p-4`}>
               <h3 className={`text-sm font-bold uppercase mb-4 flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 <Plus className="w-4 h-4 text-green-500" />
@@ -196,8 +195,16 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
                 <input
                   type="text"
                   placeholder="Farmer Name"
-                  value={newFarmer.name}
-                  onChange={(e) => setNewFarmer({ ...newFarmer, name: e.target.value })}
+                  value={newFarmer.farmerName}
+                  onChange={(e) => setNewFarmer({ ...newFarmer, farmerName: e.target.value })}
+                  className={`w-full p-2 border rounded text-sm ${isDark ? 'bg-gray-900 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="Mobile Number"
+                  value={newFarmer.mobileNumber}
+                  onChange={(e) => setNewFarmer({ ...newFarmer, mobileNumber: e.target.value })}
                   className={`w-full p-2 border rounded text-sm ${isDark ? 'bg-gray-900 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
                   required
                 />
@@ -211,26 +218,13 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
                 />
                 <input
                   type="number"
-                  placeholder="Area Plot (hectares)"
-                  value={newFarmer.area_plot}
-                  onChange={(e) => setNewFarmer({ ...newFarmer, area_plot: parseFloat(e.target.value) })}
+                  placeholder="Land Area (hectares)"
+                  value={newFarmer.landArea}
+                  onChange={(e) => setNewFarmer({ ...newFarmer, landArea: parseFloat(e.target.value) || 0 })}
+                  min="0.01"
+                  step="0.01"
                   className={`w-full p-2 border rounded text-sm ${isDark ? 'bg-gray-900 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
                   required
-                />
-                <input
-                  type="text"
-                  placeholder="Crop Types (comma separated)"
-                  value={newFarmer.crop_types}
-                  onChange={(e) => setNewFarmer({ ...newFarmer, crop_types: e.target.value })}
-                  className={`w-full p-2 border rounded text-sm ${isDark ? 'bg-gray-900 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                  required
-                />
-                <input
-                  type="tel"
-                  placeholder="Contact Number"
-                  value={newFarmer.contact_number}
-                  onChange={(e) => setNewFarmer({ ...newFarmer, contact_number: e.target.value })}
-                  className={`w-full p-2 border rounded text-sm ${isDark ? 'bg-gray-900 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
                 />
                 <button
                   type="submit"
