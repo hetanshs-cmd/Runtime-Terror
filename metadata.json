@@ -1,0 +1,7 @@
+{
+  "name": "National Digital Public Infrastructure Super Admin",
+  "description": "A high-performance command center dashboard for monitoring national-scale digital infrastructure, API health, and AI-driven predictive insights.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
