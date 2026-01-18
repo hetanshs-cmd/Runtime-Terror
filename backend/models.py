@@ -315,3 +315,38 @@ class Alert(db.Model):
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None,
             'isActive': self.is_active
         }
+
+class Service(db.Model):
+    __tablename__ = 'services'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    display_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    icon = db.Column(db.String(50), default='Settings')  # Lucide icon name
+    route = db.Column(db.String(100), nullable=False, unique=True)  # URL route for the service
+    component_name = db.Column(db.String(100), nullable=False)  # React component name
+    is_active = db.Column(db.Boolean, default=True)
+    is_builtin = db.Column(db.Boolean, default=False)  # Built-in services cannot be deleted
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship
+    creator = db.relationship('User', backref='services')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'displayName': self.display_name,
+            'description': self.description,
+            'icon': self.icon,
+            'route': self.route,
+            'componentName': self.component_name,
+            'isActive': self.is_active,
+            'isBuiltin': self.is_builtin,
+            'createdBy': self.created_by,
+            'createdAt': self.created_at.isoformat() if self.created_at else None,
+            'updatedAt': self.updated_at.isoformat() if self.updated_at else None
+        }

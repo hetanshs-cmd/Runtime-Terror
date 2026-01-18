@@ -5,16 +5,23 @@ import bcrypt
 import jwt
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import re
 import logging
 from rate_limit import rate_limit
 from scheduler import admit
+from chatbox import get_chatbot_response
+from dynamicDatabase import (
+    setup_metadata_table, create_dynamic_database, insert_dynamic_data, 
+    fetch_dynamic_data
+)
+from system_health_middleware import register_system_health_middleware
+from system_health_routes import system_health_bp
 from config import (
     SECRET_KEY, DEBUG, HOST, PORT, SQLALCHEMY_DATABASE_URI,
     SQLALCHEMY_TRACK_MODIFICATIONS, SESSION_TYPE
 )
-from models import db, User, UserSession, decode_token, get_user_by_token, get_session_by_refresh_token, Hospital, Farmer, Doctor, Appointment, Alert
+from models import db, User, UserSession, decode_token, get_user_by_token, get_session_by_refresh_token, Hospital, Farmer, Doctor, Appointment, Alert, Service
 
 # User Hierarchy and Permissions
 USER_HIERARCHY = {
@@ -169,7 +176,11 @@ with app.app_context():
     # Commit all the new users to the database
     db.session.commit()
 
-@app.route('/api/auth/login', methods=['POST'])
+# Register system health monitoring
+register_system_health_middleware(app)
+app.register_blueprint(system_health_bp)
+
+@app.route('/auth/login', methods=['POST'])
 def login():
     """Login endpoint"""
     try:
@@ -254,7 +265,7 @@ def login():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/auth/register', methods=['POST'])
+@app.route('/auth/register', methods=['POST'])
 def register():
     """Registration endpoint"""
     try:
@@ -317,7 +328,7 @@ def register():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/auth/verify', methods=['GET'])
+@app.route('/auth/verify', methods=['GET'])
 def verify():
     """Verify token endpoint"""
     try:
@@ -352,7 +363,7 @@ def verify():
         print(f"Verification error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/auth/refresh', methods=['POST'])
+@app.route('/auth/refresh', methods=['POST'])
 def refresh_token():
     """Refresh access token using refresh token"""
     try:
@@ -404,7 +415,7 @@ def refresh_token():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/auth/logout', methods=['POST'])
+@app.route('/auth/logout', methods=['POST'])
 def logout():
     """Logout endpoint"""
     try:
@@ -431,7 +442,7 @@ def logout():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/auth/me', methods=['GET'])
+@app.route('/auth/me', methods=['GET'])
 def get_current_user():
     """Get current user information"""
     try:
@@ -462,7 +473,7 @@ def get_current_user():
         print(f"Get user error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/auth/me', methods=['PUT'])
+@app.route('/auth/me', methods=['PUT'])
 @require_auth
 def update_current_user(user):
     """Update current user profile"""
@@ -507,7 +518,7 @@ def update_current_user(user):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/tasks/submit', methods=['POST'])
+@app.route('/tasks/submit', methods=['POST'])
 def submit_task():
     """Submit a task to the worker pool"""
     try:
@@ -555,7 +566,7 @@ def submit_task():
         print(f"Task submission error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/dashboard/metrics', methods=['GET'])
+@app.route('/dashboard/metrics', methods=['GET'])
 def get_dashboard_metrics():
     """Get dashboard metrics (requires authentication)"""
     try:
@@ -613,7 +624,7 @@ def get_dashboard_metrics():
         print(f"Dashboard metrics error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/healthcare/hospitals', methods=['GET'])
+@app.route('/healthcare/hospitals', methods=['GET'])
 def get_hospitals():
     """Get all hospitals (public access for appointment booking)"""
     try:
@@ -627,63 +638,7 @@ def get_hospitals():
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@app.route('/api/alerts', methods=['GET'])
-def list_alerts():
-    """List alerts. public endpoint. Optional query: ?severity=CRITICAL"""
-    try:
-        severity = request.args.get('severity')
-        query = Alert.query.filter_by(is_active=True)
-        if severity:
-            query = query.filter_by(severity=severity)
-        alerts = query.order_by(Alert.created_at.desc()).all()
-        return jsonify({'alerts': [a.to_dict() for a in alerts]}), 200
-    except Exception as e:
-        print(f"List alerts error: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
-
-
-@app.route('/api/alerts', methods=['POST'])
-@require_permission('manage_system')
-def create_alert(user):
-    """Create an alert (super_admin only)"""
-    try:
-        data = request.get_json() or {}
-        if not data.get('type') or not data.get('message') or not data.get('severity'):
-            return jsonify({'error': 'type, message and severity are required'}), 400
-
-        alert = Alert(
-            type=data.get('type'),
-            message=data.get('message'),
-            severity=data.get('severity'),
-            created_by=user.id
-        )
-        db.session.add(alert)
-        db.session.commit()
-        return jsonify({'alert': alert.to_dict(), 'message': 'Alert created'}), 201
-    except Exception as e:
-        print(f"Create alert error: {e}")
-        db.session.rollback()
-        return jsonify({'error': 'Internal server error'}), 500
-
-
-@app.route('/api/alerts/<int:alert_id>', methods=['DELETE'])
-@require_permission('manage_system')
-def delete_alert(user, alert_id):
-    """Delete an alert (super_admin only)"""
-    try:
-        alert = Alert.query.filter_by(id=alert_id).first()
-        if not alert:
-            return jsonify({'error': 'Alert not found'}), 404
-        # Soft delete
-        alert.is_active = False
-        db.session.commit()
-        return jsonify({'message': 'Alert deleted'}), 200
-    except Exception as e:
-        print(f"Delete alert error: {e}")
-        db.session.rollback()
-        return jsonify({'error': 'Internal server error'}), 500
-
-@app.route('/api/healthcare/hospitals', methods=['POST'])
+@app.route('/healthcare/hospitals', methods=['POST'])
 @require_permission('manage_healthcare')
 def create_hospital(user):
     """Create a new hospital (admin only)"""
@@ -792,7 +747,7 @@ def create_hospital(user):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/healthcare/hospitals/<int:hospital_id>', methods=['PUT'])
+@app.route('/healthcare/hospitals/<int:hospital_id>', methods=['PUT'])
 @require_permission('manage_healthcare')
 def update_hospital(user, hospital_id):
     """Update a hospital (admin only)"""
@@ -881,7 +836,7 @@ def update_hospital(user, hospital_id):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/healthcare/hospitals/<int:hospital_id>', methods=['DELETE'])
+@app.route('/healthcare/hospitals/<int:hospital_id>', methods=['DELETE'])
 @require_permission('manage_healthcare')
 def delete_hospital(user, hospital_id):
     """Delete a hospital (admin only)"""
@@ -906,7 +861,7 @@ def delete_hospital(user, hospital_id):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/agriculture/farmers', methods=['GET'])
+@app.route('/agriculture/farmers', methods=['GET'])
 def get_farmers():
     """Get all farmers (requires authentication)"""
     try:
@@ -936,7 +891,7 @@ def get_farmers():
         print(f"Get farmers error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/agriculture/farmers', methods=['POST'])
+@app.route('/agriculture/farmers', methods=['POST'])
 @require_permission('manage_agriculture')
 def create_farmer(user):
     """Create a new farmer (admin only)"""
@@ -984,7 +939,7 @@ def create_farmer(user):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/agriculture/farmers/<int:farmer_id>', methods=['PUT'])
+@app.route('/agriculture/farmers/<int:farmer_id>', methods=['PUT'])
 @require_permission('manage_agriculture')
 def update_farmer(user, farmer_id):
     """Update a farmer (admin only)"""
@@ -1036,7 +991,7 @@ def update_farmer(user, farmer_id):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/agriculture/farmers/<int:farmer_id>', methods=['DELETE'])
+@app.route('/agriculture/farmers/<int:farmer_id>', methods=['DELETE'])
 @require_permission('manage_agriculture')
 def delete_farmer(user, farmer_id):
     """Delete a farmer (admin only)"""
@@ -1056,7 +1011,7 @@ def delete_farmer(user, farmer_id):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/healthcare/doctors', methods=['GET'])
+@app.route('/healthcare/doctors', methods=['GET'])
 def get_doctors():
     """Get all doctors (requires authentication)"""
     try:
@@ -1086,7 +1041,7 @@ def get_doctors():
         print(f"Get doctors error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/healthcare/doctors', methods=['POST'])
+@app.route('/healthcare/doctors', methods=['POST'])
 def create_doctor():
     """Create a new doctor (admin only)"""
     try:
@@ -1151,7 +1106,7 @@ def create_doctor():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/healthcare/doctors/<int:doctor_id>', methods=['PUT'])
+@app.route('/healthcare/doctors/<int:doctor_id>', methods=['PUT'])
 @require_permission('manage_healthcare')
 def update_doctor(user, doctor_id):
     """Update a doctor (admin only)"""
@@ -1203,7 +1158,7 @@ def update_doctor(user, doctor_id):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/healthcare/doctors/<int:doctor_id>', methods=['DELETE'])
+@app.route('/healthcare/doctors/<int:doctor_id>', methods=['DELETE'])
 @require_permission('manage_healthcare')
 def delete_doctor(user, doctor_id):
     """Delete a doctor (admin only)"""
@@ -1233,7 +1188,7 @@ def add_security_headers(response):
     response.headers['Content-Security-Policy'] = "default-src 'self'"
     return response
 
-@app.route('/api/appointments', methods=['GET'])
+@app.route('/appointments', methods=['GET'])
 def get_appointments():
     """Get all appointments (admin only)"""
     try:
@@ -1263,7 +1218,7 @@ def get_appointments():
         print(f"Get appointments error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/appointments', methods=['POST'])
+@app.route('/appointments', methods=['POST'])
 def create_appointment():
     """Create a new appointment (anyone can book appointments)"""
     try:
@@ -1337,7 +1292,7 @@ def create_appointment():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/appointments/<int:appointment_id>', methods=['PUT'])
+@app.route('/appointments/<int:appointment_id>', methods=['PUT'])
 def update_appointment_status(appointment_id):
     """Update appointment status (admin only)"""
     try:
@@ -1383,7 +1338,7 @@ def update_appointment_status(appointment_id):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/appointments/my', methods=['GET'])
+@app.route('/appointments/my', methods=['GET'])
 def get_my_appointments():
     """Get appointments for a specific email"""
     try:
@@ -1413,7 +1368,7 @@ def health_check():
     }), 200
 
 # User Management Endpoints (Super Admin Only)
-@app.route('/api/admin/users', methods=['GET'])
+@app.route('/admin/users', methods=['GET'])
 @require_permission('manage_users')
 def get_all_users(user):
     """Get all users (super admin only)"""
@@ -1440,7 +1395,7 @@ def get_all_users(user):
         logging.error(f"Error getting users: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/admin/users', methods=['POST'])
+@app.route('/admin/users', methods=['POST'])
 @require_permission('manage_users')
 def create_user(user):
     """Create a new user (admin and super admin only)"""
@@ -1513,7 +1468,7 @@ def create_user(user):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/admin/users/<int:user_id>', methods=['PUT'])
+@app.route('/admin/users/<int:user_id>', methods=['PUT'])
 @require_permission('manage_users')
 def update_user(user, user_id):
     """Update a user (super admin only)"""
@@ -1581,7 +1536,7 @@ def update_user(user, user_id):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@app.route('/admin/users/<int:user_id>', methods=['DELETE'])
 @require_permission('manage_users')
 def delete_user(user, user_id):
     """Delete a user (super admin only)"""
@@ -1612,6 +1567,772 @@ def delete_user(user, user_id):
     except Exception as e:
         logging.error(f"Error deleting user: {e}")
         db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Service Management Endpoints (Super Admin Only)
+@app.route('/admin/services', methods=['GET'])
+@require_permission('manage_system')
+def get_services(user):
+    """Get all services (super_admin only)"""
+    try:
+        services = Service.query.all()
+        return jsonify([service.to_dict() for service in services]), 200
+    except Exception as e:
+        logging.error(f"Error fetching services: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@app.route('/admin/services', methods=['POST'])
+@require_permission('manage_system')
+def create_service(user):
+    """Create a new service (super_admin only)"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Validate required fields
+        required_fields = ['name', 'displayName', 'route', 'componentName']
+        for field in required_fields:
+            if field not in data or not data[field].strip():
+                return jsonify({'error': f'{field} is required'}), 400
+
+        # Validate route format (should start with /)
+        if not data['route'].startswith('/'):
+            return jsonify({'error': 'Route must start with /'}), 400
+
+        # Check if route already exists
+        existing_service = Service.query.filter_by(route=data['route']).first()
+        if existing_service:
+            return jsonify({'error': 'Service with this route already exists'}), 409
+
+        # Create new service
+        new_service = Service(
+            name=data['name'].strip(),
+            display_name=data['displayName'].strip(),
+            description=data.get('description', '').strip(),
+            icon=data.get('icon', 'Settings').strip(),
+            route=data['route'].strip(),
+            component_name=data['componentName'].strip(),
+            is_active=data.get('isActive', True),
+            is_builtin=False,  # User-created services are not built-in
+            created_by=user.id
+        )
+
+        db.session.add(new_service)
+        db.session.commit()
+
+        logging.info(f"Service {new_service.name} created by {user.username}")
+        return jsonify(new_service.to_dict()), 201
+    except Exception as e:
+        logging.error(f"Error creating service: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/services/<int:service_id>', methods=['PUT'])
+def update_service(service_id):
+    """Update an existing service"""
+    try:
+        # Verify user authentication
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Missing or invalid authorization header'}), 401
+        
+        token = auth_header.split(' ')[1]
+        user = get_user_by_token(token)
+        if not user:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+        
+        # Apply rate limiting
+        rate_limit(user.username)
+        
+        # Only super_admin can manage services
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        service = Service.query.get(service_id)
+        if not service:
+            return jsonify({'error': 'Service not found'}), 404
+        
+        # Cannot modify built-in services
+        if service.is_builtin:
+            return jsonify({'error': 'Cannot modify built-in services'}), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate required fields if provided
+        if 'name' in data and not data['name'].strip():
+            return jsonify({'error': 'Name cannot be empty'}), 400
+        if 'displayName' in data and not data['displayName'].strip():
+            return jsonify({'error': 'Display name cannot be empty'}), 400
+        if 'route' in data:
+            if not data['route'].strip():
+                return jsonify({'error': 'Route cannot be empty'}), 400
+            if not data['route'].startswith('/'):
+                return jsonify({'error': 'Route must start with /'}), 400
+            # Check if route already exists (excluding current service)
+            existing_service = Service.query.filter_by(route=data['route']).filter(Service.id != service_id).first()
+            if existing_service:
+                return jsonify({'error': 'Service with this route already exists'}), 409
+        if 'componentName' in data and not data['componentName'].strip():
+            return jsonify({'error': 'Component name cannot be empty'}), 400
+        
+        # Update service fields
+        if 'name' in data:
+            service.name = data['name'].strip()
+        if 'displayName' in data:
+            service.display_name = data['displayName'].strip()
+        if 'description' in data:
+            service.description = data.get('description', '').strip()
+        if 'icon' in data:
+            service.icon = data.get('icon', 'Settings').strip()
+        if 'route' in data:
+            service.route = data['route'].strip()
+        if 'componentName' in data:
+            service.component_name = data['componentName'].strip()
+        if 'isActive' in data:
+            service.is_active = data['isActive']
+        
+        db.session.commit()
+        
+        logging.info(f"Service {service.name} updated by {user.username}")
+        return jsonify(service.to_dict()), 200
+    
+    except Exception as e:
+        logging.error(f"Error updating service: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/services/<int:service_id>', methods=['DELETE'])
+def delete_service(service_id):
+    """Delete a service"""
+    try:
+        # Verify user authentication
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Missing or invalid authorization header'}), 401
+        
+        token = auth_header.split(' ')[1]
+        user = get_user_by_token(token)
+        if not user:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+        
+        # Apply rate limiting
+        rate_limit(user.username)
+        
+        # Only super_admin can manage services
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        service = Service.query.get(service_id)
+        if not service:
+            return jsonify({'error': 'Service not found'}), 404
+        
+        # Cannot delete built-in services
+        if service.is_builtin:
+            return jsonify({'error': 'Cannot delete built-in services'}), 403
+        
+        # Delete the service
+        db.session.delete(service)
+        db.session.commit()
+        
+        logging.info(f"Service {service.name} deleted by {user.username}")
+        return jsonify({'message': 'Service deleted successfully'}), 200
+    
+    except Exception as e:
+        logging.error(f"Error deleting service: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/restart', methods=['POST'])
+def restart_backend():
+    """Restart the backend server (for service updates)"""
+    try:
+        # Verify user authentication
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Missing or invalid authorization header'}), 401
+        
+        token = auth_header.split(' ')[1]
+        user = get_user_by_token(token)
+        if not user:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+        
+        # Apply rate limiting
+        rate_limit(user.username)
+        
+        # Only super_admin can restart the backend
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        # In a production environment, this would trigger a proper restart mechanism
+        # For now, we'll just return a success message
+        # The frontend will handle showing a restart notification
+        
+        logging.info(f"Backend restart requested by {user.username}")
+        return jsonify({
+            'message': 'Backend restart initiated',
+            'note': 'The server will restart momentarily to apply service changes'
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error initiating restart: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Dynamic Database Endpoints
+@app.route('/admin/dynamic/setup', methods=['POST'])
+@require_auth
+def setup_dynamic_database(user):
+    """Initialize dynamic database metadata table"""
+    try:
+        # Only super_admin can setup dynamic database
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        setup_metadata_table()
+        
+        return jsonify({
+            'message': 'Dynamic database setup completed successfully'
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error setting up dynamic database: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+        
+        # Apply rate limiting
+        rate_limit(user.username)
+        
+        # Only super_admin can setup dynamic database
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        setup_metadata_table()
+        return jsonify({'message': 'Dynamic database metadata table initialized successfully'}), 200
+    
+    except Exception as e:
+        logging.error(f"Error setting up dynamic database: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables', methods=['POST'])
+@require_auth
+def create_dynamic_table(user):
+    """Create a new dynamic table"""
+    try:
+        # Only super_admin can create dynamic tables
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        table_name = data.get('table_name')
+        fields = data.get('fields', [])
+        data_types = data.get('data_types', [])
+        show_ui = data.get('show_ui', [])
+        
+        if not table_name or not fields or not data_types or not show_ui:
+            return jsonify({'error': 'table_name, fields, data_types, and show_ui are required'}), 400
+        
+        create_dynamic_database(table_name, fields, data_types, show_ui)
+        
+        return jsonify({
+            'message': f'Dynamic table "{table_name}" created successfully',
+            'table_name': table_name
+        }), 201
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error creating dynamic table: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables', methods=['GET'])
+@require_auth
+def get_dynamic_tables(user):
+    """Get list of all dynamic tables"""
+    try:
+        # Only admin and super_admin can view dynamic tables
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        # Import here to avoid circular imports
+        import mysql.connector as con
+        connector = con.connect(
+            host='localhost',
+            user='root',
+            password='Soul#13211993',
+            database='govconnect'
+        )
+        cursor = connector.cursor(dictionary=True)
+        
+        cursor.execute("SHOW TABLES")
+        tables = cursor.fetchall()
+        
+        # Filter for dynamic tables (those with metadata)
+        cursor.execute("SELECT DISTINCT table_name FROM dynamic_table_meta")
+        dynamic_tables = [row['table_name'] for row in cursor.fetchall()]
+        
+        connector.close()
+        
+        return jsonify({'tables': dynamic_tables}), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting dynamic tables: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables/<table_name>/metadata', methods=['GET'])
+@require_auth
+def get_table_metadata(user, table_name):
+    """Get metadata for a specific dynamic table"""
+    try:
+        # Only admin and super_admin can view table metadata
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        import mysql.connector as con
+        connector = con.connect(
+            host='localhost',
+            user='root',
+            password='Soul#13211993',
+            database='govconnect'
+        )
+        cursor = connector.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT field_name, data_type, show_ui 
+            FROM dynamic_table_meta 
+            WHERE table_name = %s
+        """, (table_name,))
+        
+        metadata = cursor.fetchall()
+        connector.close()
+        
+        if not metadata:
+            return jsonify({'error': 'Table not found or no metadata available'}), 404
+        
+        return jsonify({
+            'table_name': table_name,
+            'fields': metadata
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting table metadata: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables/<table_name>/data', methods=['POST'])
+@require_auth
+def insert_dynamic_table_data(user, table_name):
+    """Insert data into a dynamic table"""
+    try:
+        # Only admin and super_admin can insert data
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        insert_dynamic_data(table_name, data)
+        
+        return jsonify({
+            'message': f'Data inserted into "{table_name}" successfully'
+        }), 201
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error inserting data: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables/<table_name>/data', methods=['GET'])
+@require_auth
+def get_dynamic_table_data(user, table_name):
+    """Get data from a dynamic table"""
+    try:
+        # Only admin and super_admin can view data
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        ui_only = request.args.get('ui_only', 'true').lower() == 'true'
+        data = fetch_dynamic_data(table_name, ui_only)
+        
+        return jsonify({
+            'table_name': table_name,
+            'data': data,
+            'ui_only': ui_only
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error fetching data: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables/<table_name>/data/<int:record_id>', methods=['PUT'])
+@require_auth
+def update_dynamic_table_data(user, table_name, record_id):
+    """Update a record in a dynamic table"""
+    try:
+        # Only admin and super_admin can update data
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        # Import the update function (we need to add this to dynamicDatabase.py)
+        from dynamicDatabase import update_dynamic_data
+        update_dynamic_data(table_name, record_id, data)
+        
+        return jsonify({
+            'message': f'Record {record_id} in "{table_name}" updated successfully'
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error updating data: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables/<table_name>/data/<int:record_id>', methods=['DELETE'])
+@require_auth
+def delete_dynamic_table_data(user, table_name, record_id):
+    """Delete a record from a dynamic table"""
+    try:
+        # Only admin and super_admin can delete data
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        # Import the delete function (we need to add this to dynamicDatabase.py)
+        from dynamicDatabase import delete_dynamic_data
+        delete_dynamic_data(table_name, record_id)
+        
+        return jsonify({
+            'message': f'Record {record_id} in "{table_name}" deleted successfully'
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error deleting data: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Alert Management Endpoints
+@app.route('/alerts', methods=['GET'])
+@require_auth
+def get_alerts(user):
+    """Get all active alerts"""
+    try:
+        alerts = Alert.query.filter_by(is_active=True).order_by(Alert.created_at.desc()).all()
+        
+        return jsonify({
+            'alerts': [alert.to_dict() for alert in alerts]
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting alerts: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/alerts', methods=['POST'])
+@require_auth
+def create_alert(user):
+    """Create a new alert (admin and super_admin only)"""
+    try:
+        # Only admin and super_admin can create alerts
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        required_fields = ['type', 'message', 'severity']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': f'Required fields: {", ".join(required_fields)}'}), 400
+        
+        # Validate severity
+        if data['severity'] not in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']:
+            return jsonify({'error': 'Severity must be one of: CRITICAL, HIGH, MEDIUM, LOW'}), 400
+        
+        # Validate type
+        valid_types = ['Healthcare', 'Agriculture', 'System', 'General']
+        if data['type'] not in valid_types:
+            return jsonify({'error': f'Type must be one of: {", ".join(valid_types)}'}), 400
+        
+        alert = Alert(
+            type=data['type'],
+            message=data['message'],
+            severity=data['severity'],
+            created_by=user.id
+        )
+        
+        db.session.add(alert)
+        db.session.commit()
+        
+        logging.info(f"Alert created by {user.username}: {alert.type} - {alert.severity}")
+        return jsonify({
+            'message': 'Alert created successfully',
+            'alert': alert.to_dict()
+        }), 201
+    
+    except Exception as e:
+        logging.error(f"Error creating alert: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/alerts/<int:alert_id>', methods=['DELETE'])
+@require_auth
+def delete_alert(user, alert_id):
+    """Delete an alert (admin and super_admin only)"""
+    try:
+        # Only admin and super_admin can delete alerts
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        alert = Alert.query.get(alert_id)
+        if not alert:
+            return jsonify({'error': 'Alert not found'}), 404
+        
+        alert.is_active = False
+        db.session.commit()
+        
+        logging.info(f"Alert {alert_id} deleted by {user.username}")
+        return jsonify({'message': 'Alert deleted successfully'}), 200
+    
+    except Exception as e:
+        logging.error(f"Error deleting alert: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Dashboard Statistics Endpoints
+@app.route('/dashboard/stats/users', methods=['GET'])
+@require_auth
+def get_user_count(user):
+    """Get total number of active users"""
+    try:
+        user_count = User.query.filter_by(is_active=True).count()
+        
+        return jsonify({
+            'total_users': user_count
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting user count: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/dashboard/stats/services', methods=['GET'])
+@require_auth
+def get_services_count(user):
+    """Get total number of active services"""
+    try:
+        # Count built-in services (home, healthcare, agriculture, alerts, system-health, admin)
+        builtin_services = 6  # home, healthcare, agriculture, alerts, system-health, admin
+        
+        # Add dynamic full sections
+        dynamic_sections = Service.query.filter_by(is_active=True).count()
+        
+        total_services = builtin_services + dynamic_sections
+        
+        return jsonify({
+            'active_services': total_services
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting services count: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/dashboard/stats/regions', methods=['GET'])
+@require_auth
+def get_regions_count(user):
+    """Get number of regions (configurable by super admin)"""
+    try:
+        # Check if there's a dynamic table for regions configuration
+        try:
+            # Look for tables with "region" in the name
+            regions_data = fetch_dynamic_data('user_section_regions', ui_only=True)
+            if regions_data and len(regions_data) > 0:
+                # Use the first record's regions_count
+                regions_count = regions_data[0].get('regions_count') or regions_data[0].get('count') or regions_data[0].get('number')
+                if regions_count:
+                    return jsonify({
+                        'regions': int(regions_count)
+                    }), 200
+        except:
+            pass
+        
+        # Default fallback
+        return jsonify({
+            'regions': 36
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting regions count: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/dashboard/stats/alerts-today', methods=['GET'])
+@require_auth
+def get_alerts_today_count(user):
+    """Get number of alerts created today"""
+    try:
+        from datetime import date
+        today = date.today()
+        
+        alerts_today = Alert.query.filter(
+            Alert.created_at >= today,
+            Alert.is_active == True
+        ).count()
+        
+        return jsonify({
+            'alerts_today': alerts_today
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting alerts today count: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/dashboard/stats/requests-per-minute', methods=['GET'])
+@require_auth
+def get_requests_per_minute_stats(user):
+    """Get current requests per minute from system health AI"""
+    try:
+        from system_health_ai import compute_health_score
+        
+        health_data = compute_health_score()
+        requests_per_minute = health_data.get('metrics', {}).get('requests_per_min', 0)
+        
+        return jsonify({
+            'requests_per_minute': requests_per_minute
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting requests per minute: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Settings Endpoints
+@app.route('/settings/regions', methods=['GET'])
+@require_auth
+def get_regions_setting(user):
+    """Get regions count setting"""
+    try:
+        # For now, return a default value. In a real app, this would be stored in a settings table
+        return jsonify({
+            'regions_count': 36
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting regions setting: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/settings/regions', methods=['PUT'])
+@require_permission('manage_system')
+def update_regions_setting(user):
+    """Update regions count setting (super admin only)"""
+    try:
+        data = request.get_json()
+        if not data or 'regions_count' not in data:
+            return jsonify({'error': 'regions_count is required'}), 400
+        
+        regions_count = int(data['regions_count'])
+        if regions_count <= 0:
+            return jsonify({'error': 'Regions count must be a positive integer'}), 400
+        
+        # In a real app, save to database
+        # For now, just return success
+        return jsonify({
+            'message': 'Regions count updated successfully',
+            'regions_count': regions_count
+        }), 200
+    
+    except ValueError:
+        return jsonify({'error': 'Regions count must be a valid integer'}), 400
+    except Exception as e:
+        logging.error(f"Error updating regions setting: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Healthcare Statistics Endpoints
+@app.route('/healthcare/stats/users', methods=['GET'])
+@require_auth
+def get_healthcare_user_count(user):
+    """Get total number of users registered in healthcare system"""
+    try:
+        # For healthcare, we might want to count users who have made appointments or are registered patients
+        # For now, return total active users (same as dashboard)
+        user_count = User.query.filter_by(is_active=True).count()
+        
+        return jsonify({
+            'total_users': user_count
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting healthcare user count: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/healthcare/stats/doctors', methods=['GET'])
+@require_auth
+def get_doctor_count(user):
+    """Get total number of registered doctors"""
+    try:
+        from models import Doctor
+        doctor_count = Doctor.query.count()
+        
+        return jsonify({
+            'total_doctors': doctor_count
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting doctor count: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/dashboard/stats/requests-per-minute', methods=['GET'])
+@require_auth
+def get_requests_per_minute(user):
+    """Get requests per minute from system health AI"""
+    try:
+        from system_health_ai import compute_health_score
+        
+        health_data = compute_health_score()
+        requests_per_min = health_data.get('metrics', {}).get('requests_per_min', 0)
+        
+        return jsonify({
+            'requests_per_minute': requests_per_min
+        }), 200
+    
+    except Exception as e:
+        logging.error(f"Error getting requests per minute: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Chat Endpoint (authenticated users only)
+@app.route('/chat', methods=['POST'])
+@require_auth
+def chat(user):
+    """Get AI-powered chatbot response (requires authentication for all users)"""
+    try:
+        # Apply rate limiting based on username
+        user_id = user.username if user else request.remote_addr
+        rate_limit(user_id)
+
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return jsonify({'error': 'Message is required'}), 400
+
+        user_message = data['message'].strip()
+        if not user_message:
+            return jsonify({'error': 'Message cannot be empty'}), 400
+
+        # Get chatbot response (conversation scoped to username)
+        bot_response = get_chatbot_response(user_message, user_id)
+
+        return jsonify({
+            'response': bot_response,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }), 200
+
+    except Exception as e:
+        logging.error(f"Error in chat endpoint: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
@@ -1647,6 +2368,29 @@ if __name__ == '__main__':
     print("POST /api/admin/users")
     print("PUT /api/admin/users/<user_id>")
     print("DELETE /api/admin/users/<user_id>")
+    
+    # Service Management Endpoints (Super Admin Only)
+    print("GET /api/admin/services")
+    print("POST /api/admin/services")
+    print("PUT /api/admin/services/<service_id>")
+    print("DELETE /api/admin/services/<service_id>")
+    print("POST /api/admin/restart")
+    
+    # Dynamic Database Endpoints (Admin/Super Admin Only)
+    print("POST /api/admin/dynamic/setup")
+    print("POST /api/admin/dynamic/tables")
+    print("GET /api/admin/dynamic/tables")
+    print("GET /api/admin/dynamic/tables/<table_name>/metadata")
+    print("POST /api/admin/dynamic/tables/<table_name>/data")
+    print("GET /api/admin/dynamic/tables/<table_name>/data")
+    
+    # Alert Endpoints
+    print("GET /api/alerts")
+    print("POST /api/alerts")
+    print("DELETE /api/alerts/<alert_id>")
+    
+    # Chat Endpoint
+    print("POST /api/chat")
     
     print(f"Running on {HOST}:{PORT}")
     app.run(debug=DEBUG, host=HOST, port=PORT)

@@ -1,5 +1,7 @@
 # Configuration for GovConnect Backend
 
+import os
+
 # Flask Configuration
 SECRET_KEY = 'your-secret-key-change-in-production'
 DEBUG = False  # Disabled to prevent restarts during testing
@@ -32,4 +34,12 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS = 7     # 7 days
 
 # Server Configuration
 HOST = '0.0.0.0'
-PORT = 5001
+# Use port 5000 for HTTP as requested
+PORT = 5000
+
+# LLM (Large Language Model) Configuration
+# Use environment variables to choose provider and model. Default to 'huggingface' and 'gpt-5-mini'.
+LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'huggingface')
+LLM_DEFAULT_MODEL = os.getenv('LLM_DEFAULT_MODEL', 'gpt-5-mini')
+LLM_API_URL = os.getenv('LLM_API_URL', '')
+LLM_API_KEY = os.getenv('LLM_API_KEY', '')
