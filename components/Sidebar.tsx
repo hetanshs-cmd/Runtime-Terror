@@ -12,7 +12,14 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Shield
+  Shield,
+  Users,
+  FileText,
+  Database,
+  Globe,
+  Truck,
+  Home,
+  Briefcase
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,10 +29,28 @@ interface SidebarProps {
   isDark: boolean;
   onMobileClose?: () => void;
   user?: any;
+  dynamicSections?: any[];
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, onMobileClose, user }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, onMobileClose, user, dynamicSections }) => {
   const location = useLocation();
+
+  // Icon mapping for dynamic sections
+  const iconMap: { [key: string]: any } = {
+    'Building2': Building2,
+    'Users': Users,
+    'FileText': FileText,
+    'Database': Database,
+    'Globe': Globe,
+    'Truck': Truck,
+    'Home': Home,
+    'Briefcase': Briefcase,
+    'HeartPulse': HeartPulse,
+    'Sprout': Sprout,
+    'Bell': Bell,
+    'Activity': Activity,
+    'Shield': Shield
+  };
 
   const menuItems = [
     { id: 'home', path: '/', icon: LayoutDashboard, label: 'Home' },
@@ -43,6 +68,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, 
   // Add farmer registration for agriculture admin, admin, and super admin only
   if (user && (user.role === 'agriculture_admin' || user.role === 'admin' || user.role === 'super_admin')) {
     menuItems.splice(3, 0, { id: 'farmer-registration', path: '/farmer-registration', icon: Sprout, label: 'Register Farmer' });
+  }
+
+  // Add dynamic sections
+  if (dynamicSections && dynamicSections.length > 0) {
+    dynamicSections.forEach((section, index) => {
+      if (section.type === 'full_section') {
+        const DynamicIcon = iconMap[section.icon] || Building2; // Default to Building2 if no icon or invalid
+        menuItems.splice(4 + index, 0, {
+          id: `dynamic-${section.id}`,
+          path: `/dynamic/${section.id}`,
+          icon: DynamicIcon,
+          label: section.name
+        });
+      }
+    });
   }
 
   // Add admin menu item for admin and super_admin users

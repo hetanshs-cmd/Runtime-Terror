@@ -15,304 +15,57 @@ user user already exists
 user user already exists
 Starting GovConnect Backend...
 Available endpoints:
-POST /api/auth/login
-POST /api/auth/register
-GET /api/auth/verify
-POST /api/auth/refresh
-POST /api/auth/logout
-POST /api/tasks/submit
-GET /api/healthcare/hospitals
-POST /api/healthcare/hospitals
-PUT /api/healthcare/hospitals/<hospital_id>
-DELETE /api/healthcare/hospitals/<hospital_id>
-GET /api/healthcare/doctors
-POST /api/healthcare/doctors
-PUT /api/healthcare/doctors/<doctor_id>
-DELETE /api/healthcare/doctors/<doctor_id>
-GET /api/agriculture/farmers
-POST /api/agriculture/farmers
-PUT /api/agriculture/farmers/<farmer_id>
-DELETE /api/agriculture/farmers/<farmer_id>
-GET /api/appointments
-POST /api/appointments
-PUT /api/appointments/<appointment_id>
-GET /api/appointments/my
-GET /api/dashboard/metrics
-GET /api/health
-GET /api/admin/users
-POST /api/admin/users
-PUT /api/admin/users/<user_id>
-DELETE /api/admin/users/<user_id>
-GET /api/admin/services
-POST /api/admin/services
-PUT /api/admin/services/<service_id>
-DELETE /api/admin/services/<service_id>
-POST /api/admin/restart
-POST /api/admin/dynamic/setup
-POST /api/admin/dynamic/tables
-GET /api/admin/dynamic/tables
-GET /api/admin/dynamic/tables/<table_name>/metadata
-POST /api/admin/dynamic/tables/<table_name>/data
-GET /api/admin/dynamic/tables/<table_name>/data
-GET /api/alerts
-POST /api/alerts
-DELETE /api/alerts/<alert_id>
-POST /api/chat
+POST /auth/login
+POST /auth/register
+GET /auth/verify
+POST /auth/refresh
+POST /auth/logout
+POST /tasks/submit
+GET /healthcare/hospitals
+POST /healthcare/hospitals
+PUT /healthcare/hospitals/<hospital_id>
+DELETE /healthcare/hospitals/<hospital_id>
+GET /healthcare/doctors
+POST /healthcare/doctors
+PUT /healthcare/doctors/<doctor_id>
+DELETE /healthcare/doctors/<doctor_id>
+GET /agriculture/farmers
+POST /agriculture/farmers
+PUT /agriculture/farmers/<farmer_id>
+DELETE /agriculture/farmers/<farmer_id>
+GET /appointments
+POST /appointments
+PUT /appointments/<appointment_id>
+GET /appointments/my
+GET /dashboard/metrics
+GET /health
+GET /admin/users
+POST /admin/users
+PUT /admin/users/<user_id>
+DELETE /admin/users/<user_id>
+GET /admin/services
+POST /admin/services
+PUT /admin/services/<service_id>
+DELETE /admin/services/<service_id>
+POST /admin/restart
+POST /admin/dynamic/setup
+POST /admin/dynamic/tables
+GET /admin/dynamic/tables
+GET /admin/dynamic/tables/<table_name>/metadata
+POST /admin/dynamic/tables/<table_name>/data
+GET /admin/dynamic/tables/<table_name>/data
+GET /alerts
+POST /alerts
+DELETE /alerts/<alert_id>
+POST /chat
 Running on 0.0.0.0:5000
  * Serving Flask app 'app'
  * Debug mode: off
-2026-01-18 12:40:35,718 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+2026-01-18 12:43:52,460 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5000
  * Running on http://10.1.125.158:5000
-2026-01-18 12:40:35,718 - INFO - [33mPress CTRL+C to quit[0m
-2026-01-18 12:40:36,148 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:36] "[33mPOST /api/auth/login HTTP/1.1[0m" 404 -
-2026-01-18 12:40:36,157 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:36] "[33mPOST /api/chat HTTP/1.1[0m" 404 -
-2026-01-18 12:40:38,834 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:38] "[31m[1mGET /auth/verify HTTP/1.1[0m" 401 -
-2026-01-18 12:40:38,849 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:38] "[31m[1mGET /auth/verify HTTP/1.1[0m" 401 -
-2026-01-18 12:40:40,234 - INFO - Successful login for user: superadmin from IP: 127.0.0.1
-/home/kushk/Documents/Ingenous Hackathon 7.0/GovConnect/backend/app.py:227: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-  'timestamp': datetime.utcnow().isoformat(),
-2026-01-18 12:40:40,245 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "POST /auth/login HTTP/1.1" 200 -
-2026-01-18 12:40:40,312 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:40,341 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:40,362 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:40:40,367 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:40:40,369 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:40:40,369 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:40:40,370 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:40:40,371 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:40,372 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:40:40,388 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:40,398 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:40:40,407 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:40:40,408 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:40:40,411 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:40:40,412 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:40:40,415 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:40:40,418 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:40,436 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:40] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:50,301 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:50] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:52,157 - ERROR - Exception on /super-admin/system-health/status [GET]
-Traceback (most recent call last):
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 2529, in wsgi_app
-    response = self.full_dispatch_request()
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 1825, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask_cors/extension.py", line 165, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ~^^^^^^^^^^^^^^^^^
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 1823, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 1799, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "/home/kushk/Documents/Ingenous Hackathon 7.0/GovConnect/backend/system_health_routes.py", line 34, in system_health_status
-    return jsonify(compute_health_score())
-                   ~~~~~~~~~~~~~~~~~~~~^^
-  File "/home/kushk/Documents/Ingenous Hackathon 7.0/GovConnect/backend/system_health_ai.py", line 64, in compute_health_score
-    data = load_metrics()
-  File "/home/kushk/Documents/Ingenous Hackathon 7.0/GovConnect/backend/system_health_ai.py", line 38, in load_metrics
-    data = json.load(f)
-  File "/usr/lib/python3.13/json/__init__.py", line 298, in load
-    return loads(fp.read(),
-        cls=cls, object_hook=object_hook,
-        parse_float=parse_float, parse_int=parse_int,
-        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
-  File "/usr/lib/python3.13/json/__init__.py", line 352, in loads
-    return _default_decoder.decode(s)
-           ~~~~~~~~~~~~~~~~~~~~~~~^^^
-  File "/usr/lib/python3.13/json/decoder.py", line 345, in decode
-    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.13/json/decoder.py", line 361, in raw_decode
-    obj, end = self.scan_once(s, idx)
-               ~~~~~~~~~~~~~~^^^^^^^^
-json.decoder.JSONDecodeError: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:40:52,179 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:52] "[35m[1mGET /super-admin/system-health/status HTTP/1.1[0m" 500 -
-2026-01-18 12:40:52,192 - ERROR - Exception on /super-admin/system-health/status [GET]
-Traceback (most recent call last):
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 2529, in wsgi_app
-    response = self.full_dispatch_request()
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 1825, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask_cors/extension.py", line 165, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ~^^^^^^^^^^^^^^^^^
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 1823, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/home/kushk/.local/lib/python3.13/site-packages/flask/app.py", line 1799, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "/home/kushk/Documents/Ingenous Hackathon 7.0/GovConnect/backend/system_health_routes.py", line 34, in system_health_status
-    return jsonify(compute_health_score())
-                   ~~~~~~~~~~~~~~~~~~~~^^
-  File "/home/kushk/Documents/Ingenous Hackathon 7.0/GovConnect/backend/system_health_ai.py", line 64, in compute_health_score
-    data = load_metrics()
-  File "/home/kushk/Documents/Ingenous Hackathon 7.0/GovConnect/backend/system_health_ai.py", line 38, in load_metrics
-    data = json.load(f)
-  File "/usr/lib/python3.13/json/__init__.py", line 298, in load
-    return loads(fp.read(),
-        cls=cls, object_hook=object_hook,
-        parse_float=parse_float, parse_int=parse_int,
-        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
-  File "/usr/lib/python3.13/json/__init__.py", line 352, in loads
-    return _default_decoder.decode(s)
-           ~~~~~~~~~~~~~~~~~~~~~~~^^^
-  File "/usr/lib/python3.13/json/decoder.py", line 345, in decode
-    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.13/json/decoder.py", line 361, in raw_decode
-    obj, end = self.scan_once(s, idx)
-               ~~~~~~~~~~~~~~^^^^^^^^
-json.decoder.JSONDecodeError: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:40:52,195 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:52] "[35m[1mGET /super-admin/system-health/status HTTP/1.1[0m" 500 -
-2026-01-18 12:40:53,036 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:53] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:53,036 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:53] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:53,055 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:53] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:53,056 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:53] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:54,524 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:54] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:54,535 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:54] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:54,536 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:54] "GET /agriculture/farmers HTTP/1.1" 200 -
-2026-01-18 12:40:54,557 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:54] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:54,558 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:54] "GET /agriculture/farmers HTTP/1.1" 200 -
-2026-01-18 12:40:54,558 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:54] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:57,739 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:57,739 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:40:57,741 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:40:57,741 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:40:57,741 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:40:57,780 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:57,781 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:40:57,782 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:40:57,783 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:40:57,784 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:40:57,785 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:40:57,807 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:40:57,807 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:40:57,830 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:57] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:40:59,888 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:40:59,892 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:40:59,892 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:40:59,893 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:40:59,894 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:40:59,894 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:40:59,926 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:40:59,927 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:59,927 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:40:59,928 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:40:59,929 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:40:59,931 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:40:59,949 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:40:59,952 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:40:59,952 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:40:59,953 - INFO - 127.0.0.1 - - [18/Jan/2026 12:40:59] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:00,299 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:00] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:01,353 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:01,359 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:01,361 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:01,362 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:41:01,363 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:01,396 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:41:01,397 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:01,399 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:01,401 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:01,402 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:41:01,403 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:01,427 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:01,427 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:41:01,448 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:01] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:04,458 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:41:04,460 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:41:04,460 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:41:04,461 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:41:04,461 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:04,462 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:41:04,488 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:41:04,492 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:04,496 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:41:04,496 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:41:04,497 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:04,498 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:41:04,517 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:41:04,518 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:04,519 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:41:04,519 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:04] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:41:10,303 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:10] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:11,914 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:11] "GET /auth/verify HTTP/1.1" 200 -
-2026-01-18 12:41:11,928 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:11] "GET /auth/verify HTTP/1.1" 200 -
-2026-01-18 12:41:11,981 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:11] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:11,984 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:11] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:41:11,992 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:11] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:41:11,997 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:11] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:41:12,000 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:41:12,002 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:41:12,002 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:41:12,031 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:12,044 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:41:12,048 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:41:12,050 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:41:12,051 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:41:12,051 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:41:12,052 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:12,074 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:12,075 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:12,082 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:41:12,114 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:12] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:21,978 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:21] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:24,135 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:24] "POST /chat HTTP/1.1" 200 -
-2026-01-18 12:41:31,978 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:31] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:41,980 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:41] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:43,969 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:43] "POST /chat HTTP/1.1" 200 -
-2026-01-18 12:41:51,978 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:51] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:41:53,177 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:53] "POST /chat HTTP/1.1" 200 -
-2026-01-18 12:41:58,433 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:58,447 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:58,450 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:58,452 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:58,453 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:41:58,453 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:41:58,485 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:41:58,487 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:58,488 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:58,488 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:41:58,489 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:41:58,505 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:58,522 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:41:58,527 - INFO - 127.0.0.1 - - [18/Jan/2026 12:41:58] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:42:01,978 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:01] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:42:11,321 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /auth/verify HTTP/1.1" 200 -
-2026-01-18 12:42:11,335 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /auth/verify HTTP/1.1" 200 -
-2026-01-18 12:42:11,428 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:42:11,429 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:42:11,434 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:42:11,435 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:42:11,435 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:42:11,477 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:42:11,477 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:42:11,478 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:42:11,478 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:42:11,480 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:42:11,481 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/doctors HTTP/1.1" 200 -
-2026-01-18 12:42:11,513 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:42:11,514 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/stats/users HTTP/1.1" 200 -
-2026-01-18 12:42:11,515 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/stats/doctors HTTP/1.1" 200 -
-2026-01-18 12:42:11,518 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /alerts?severity=CRITICAL HTTP/1.1" 200 -
-2026-01-18 12:42:11,545 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:11] "GET /healthcare/hospitals HTTP/1.1" 200 -
-2026-01-18 12:42:13,683 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:42:13,684 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:42:13,685 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:42:13,685 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:42:13,685 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:42:13,719 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:42:13,722 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:42:13,722 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /alerts HTTP/1.1" 200 -
-2026-01-18 12:42:13,723 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/services HTTP/1.1" 200 -
-2026-01-18 12:42:13,724 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/users HTTP/1.1" 200 -
-2026-01-18 12:42:13,724 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/alerts-today HTTP/1.1" 200 -
-2026-01-18 12:42:13,726 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:42:13,744 - ERROR - Error getting requests per minute: Expecting ',' delimiter: line 1 column 598 (char 597)
-2026-01-18 12:42:13,745 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /auth/me HTTP/1.1" 200 -
-2026-01-18 12:42:13,746 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "GET /dashboard/stats/regions HTTP/1.1" 200 -
-2026-01-18 12:42:13,747 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:13] "[35m[1mGET /dashboard/stats/requests-per-minute HTTP/1.1[0m" 500 -
-2026-01-18 12:42:21,418 - INFO - 127.0.0.1 - - [18/Jan/2026 12:42:21] "GET /alerts HTTP/1.1" 200 -
+2026-01-18 12:43:52,460 - INFO - [33mPress CTRL+C to quit[0m
+2026-01-18 12:43:52,804 - INFO - 127.0.0.1 - - [18/Jan/2026 12:43:52] "[33mPOST /api/auth/login HTTP/1.1[0m" 404 -
+2026-01-18 12:43:52,811 - INFO - 127.0.0.1 - - [18/Jan/2026 12:43:52] "[33mPOST /api/chat HTTP/1.1[0m" 404 -
+2026-01-18 12:44:02,357 - INFO - 127.0.0.1 - - [18/Jan/2026 12:44:02] "GET /alerts HTTP/1.1" 200 -

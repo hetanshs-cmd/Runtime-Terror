@@ -33,14 +33,25 @@ def load_metrics(max_window_seconds=600):
     if not os.path.exists(LOG_FILE):
         return []
 
-    now = time.time()
-    with open(LOG_FILE, "r") as f:
-        data = json.load(f)
+    try:
+        now = time.time()
+        with open(LOG_FILE, "r") as f:
+            data = json.load(f)
 
-    return [
-        d for d in data
-        if now - d["timestamp"] <= max_window_seconds
-    ]
+        return [
+            d for d in data
+            if now - d["timestamp"] <= max_window_seconds
+        ]
+    except (json.JSONDecodeError, IOError, KeyError) as e:
+        # If file is corrupted, return empty list and log warning
+        print(f"Warning: Failed to load system metrics: {e}. Using empty metrics.")
+        # Try to recreate the file
+        try:
+            with open(LOG_FILE, "w") as f:
+                json.dump([], f)
+        except Exception:
+            pass  # If we can't even recreate, just continue
+        return []
 
 
 # ==========================

@@ -1,4 +1,6 @@
 
+/// <reference types="vite/client" />
+
 export enum HealthStatus {
   HEALTHY = 'Healthy',
   DEGRADED = 'Degraded',

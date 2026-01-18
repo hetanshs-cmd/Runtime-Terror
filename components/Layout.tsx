@@ -11,6 +11,8 @@ import AdminPage from '../pages/AdminPage';
 import HospitalRegistrationPage from '../pages/HospitalRegistrationPage';
 import FarmerRegistrationPage from '../pages/FarmerRegistrationPage';
 import Settings from './Settings';
+import ChatBox from './ChatBox';
+import DynamicSectionPage from './DynamicSectionPage';
 
 interface LayoutProps {
   isDark: boolean;
@@ -22,6 +24,15 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [dynamicSections, setDynamicSections] = useState<any[]>([]);
+
+  // Load dynamic sections
+  useEffect(() => {
+    const saved = localStorage.getItem('dynamic_full_sections');
+    if (saved) {
+      setDynamicSections(JSON.parse(saved));
+    }
+  }, []);
 
   // Handle window resize for mobile responsiveness
   useEffect(() => {
@@ -58,6 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
         isDark={isDark}
         onMobileClose={handleMobileClose}
         user={user}
+        dynamicSections={dynamicSections}
       />
 
       <div className={`flex-1 flex flex-col ${!isMobile ? (sidebarOpen ? 'ml-64' : 'ml-16') : 'ml-0'}`}>
@@ -83,11 +95,22 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
               <Route path="/hospital-registration" element={<HospitalRegistrationPage isDark={isDark} user={user} />} />
               <Route path="/farmer-registration" element={<FarmerRegistrationPage isDark={isDark} user={user} />} />
               <Route path="/settings" element={<Settings isDark={isDark} />} />
+              {/* Dynamic Routes */}
+              {dynamicSections.map((section) => (
+                <Route
+                  key={section.id}
+                  path={section.path}
+                  element={<DynamicSectionPage isDark={isDark} sectionData={section} />}
+                />
+              ))}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
         </main>
       </div>
+
+      {/* Chat Box - Available on all pages */}
+      <ChatBox isDark={isDark} />
     </div>
   );
 };

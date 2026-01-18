@@ -59,6 +59,12 @@ const HealthcareSector: React.FC<HealthcareSectorProps> = ({ isDark = true, user
   const [userRole, setUserRole] = useState<string>('');
   const [viewEmail, setViewEmail] = useState<string>('');
   const [showAppointmentViewer, setShowAppointmentViewer] = useState(false);
+
+  // KPI Statistics State
+  const [kpiStats, setKpiStats] = useState({
+    totalUsers: 'Loading...',
+    totalDoctors: 'Loading...'
+  });
   const [newDoctor, setNewDoctor] = useState({
     drName: '',
     hospitalId: '',
@@ -93,7 +99,32 @@ const HealthcareSector: React.FC<HealthcareSectorProps> = ({ isDark = true, user
     fetchDoctors();
     fetchUserRole();
     fetchCriticalAlerts();
+    loadKPIStats();
   }, []);
+
+  // Load KPI statistics from API
+  const loadKPIStats = async () => {
+    try {
+      const [usersRes, doctorsRes] = await Promise.all([
+        fetch('/api/healthcare/stats/users', { credentials: 'include' }),
+        fetch('/api/healthcare/stats/doctors', { credentials: 'include' })
+      ]);
+
+      const users = usersRes.ok ? await usersRes.json() : { total_users: 'Error' };
+      const doctors = doctorsRes.ok ? await doctorsRes.json() : { total_doctors: 'Error' };
+
+      setKpiStats({
+        totalUsers: users.total_users?.toString() || 'Error',
+        totalDoctors: doctors.total_doctors?.toString() || 'Error'
+      });
+    } catch (error) {
+      console.error('Error loading healthcare KPI stats:', error);
+      setKpiStats({
+        totalUsers: 'Error',
+        totalDoctors: 'Error'
+      });
+    }
+  };
 
   const fetchCriticalAlerts = async () => {
     try {
@@ -278,10 +309,10 @@ const HealthcareSector: React.FC<HealthcareSectorProps> = ({ isDark = true, user
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard title="Total Users Registered" value="842.5M" trend="+0.8%" icon={Users} color="indigo" isDark={isDark} />
+        <KPICard title="Total Users Registered" value={kpiStats.totalUsers} trend="+0.8%" icon={Users} color="indigo" isDark={isDark} />
         <KPICard title="Total Hospitals Linked" value={hospitals.length.toString()} trend="+412" icon={Building2} color="blue" isDark={isDark} />
         <KPICard title="Avg. Waiting Time" value="18m" trend="-2m" icon={Activity} color="emerald" isDark={isDark} />
-        <KPICard title="Tele-Health Consults" value="1.2M" trend="+12%" icon={Activity} color="purple" isDark={isDark} />
+        <KPICard title="Registered Doctors" value={kpiStats.totalDoctors} trend="+12%" icon={Activity} color="purple" isDark={isDark} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

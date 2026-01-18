@@ -19,7 +19,7 @@ interface Farmer {
   updatedAt?: string;
 }
 
-const cropData = [
+const cropDataStatic = [
   { name: 'Wheat', area: 4500, health: 92 },
   { name: 'Rice', area: 3800, health: 85 },
   { name: 'Maize', area: 2100, health: 78 },
@@ -37,10 +37,14 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
     location: '',
     landArea: 0
   });
+  const [alertsCount, setAlertsCount] = useState<number>(0);
+  const [cropData, setCropData] = useState(cropDataStatic);
 
   useEffect(() => {
     fetchFarmers();
     fetchUserRole();
+    loadAlertsCount();
+    loadCropData();
   }, []);
 
   const fetchFarmers = async () => {
@@ -73,6 +77,60 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
     }
   };
 
+  const loadAlertsCount = async () => {
+    try {
+      const response = await fetch('/api/alerts', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Count agriculture-related alerts
+        const agricultureAlerts = data.alerts.filter((alert: any) => alert.type === 'Agriculture').length;
+        setAlertsCount(agricultureAlerts);
+      }
+    } catch (error) {
+      console.error('Failed to load alerts count:', error);
+    }
+  };
+
+  const loadCropData = async () => {
+    // Check if user has permission to view dynamic crop data
+    if (userRole === 'super_admin' || userRole === 'agriculture_admin' || userRole === 'agriculture_admin2') {
+      try {
+        // Try to load from dynamic table for crop data
+        // Look for sections with title containing "crop" or table name containing "crop"
+        const sections = JSON.parse(localStorage.getItem('dynamic_sections') || '[]');
+        const cropSection = sections.find((s: any) =>
+          s.title.toLowerCase().includes('crop') ||
+          (s.table_name && s.table_name.includes('crop'))
+        );
+
+        if (cropSection && cropSection.table_name) {
+          const response = await fetch(`/api/admin/dynamic/tables/${cropSection.table_name}/data`, {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.data && data.data.length > 0) {
+              // Transform dynamic data to match expected format
+              const dynamicCropData = data.data.map((item: any) => ({
+                name: item.crop_name || item.name || item.crop,
+                area: parseInt(item.area) || parseInt(item.cultivation_area) || 0,
+                health: parseInt(item.health) || parseInt(item.health_status) || 0
+              }));
+              setCropData(dynamicCropData);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load dynamic crop data:', error);
+      }
+    }
+    // Fallback to static data
+    setCropData(cropDataStatic);
+  };
+
   const handleAddFarmer = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -102,15 +160,23 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
           </h2>
           <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Predictive crop analysis and real-time weather monitoring</p>
         </div>
-        <div className={`px-3 py-1 border rounded text-sm font-bold uppercase ${isDark ? 'bg-green-900 border-green-600 text-green-400' : 'bg-green-100 border-green-400 text-green-700'}`}>
-          Harvest Active
+        <div className="flex items-center gap-2">
+          <div className={`px-3 py-1 border rounded text-sm font-bold uppercase ${isDark ? 'bg-green-900 border-green-600 text-green-400' : 'bg-green-100 border-green-400 text-green-700'}`}>
+            Harvest Active
+          </div>
+          <button
+            onClick={() => window.open('https://pmkisan.gov.in/', '_blank')}
+            className={`px-3 py-1 border rounded text-sm font-bold uppercase transition-colors ${isDark ? 'bg-blue-900 border-blue-600 text-blue-400 hover:bg-blue-800' : 'bg-blue-100 border-blue-400 text-blue-700 hover:bg-blue-200'}`}
+          >
+            View Schemes
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KPICard title="Farmers Registered" value={farmers.length.toString()} trend="+4.2%" icon={Users} color="emerald" isDark={isDark} />
         <KPICard title="Cultivation Area" value={`${farmers.reduce((sum, f) => sum + f.landArea, 0).toFixed(3)} ha`} trend="+0.5%" icon={Sprout} color="indigo" isDark={isDark} />
-        <KPICard title="Active Alerts" value="14" trend="-2" icon={CloudRain} color="blue" isDark={isDark} />
+        <KPICard title="Active Alerts" value={alertsCount.toString()} trend="-2" icon={CloudRain} color="blue" isDark={isDark} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -287,6 +353,28 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
               <p className={`text-xs mt-1 ${isDark ? 'text-yellow-300' : 'text-yellow-600'}`}>Farmers in North-West zones advised to harvest mature wheat crops before 24th May storm system arrival.</p>
             </div>
           </div>
+
+          {/* Crop Data Management Section (Super Admin and Agriculture Admins only) */}
+          {(userRole === 'super_admin' || userRole === 'agriculture_admin' || userRole === 'agriculture_admin2') && (
+            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-300'} border rounded p-4`}>
+              <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-black'}`}>
+                <BarChart4 className="w-5 h-5 text-green-500" />
+                Manage Crop Data
+              </h3>
+              <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Create a dynamic section named "crop_data" in the dashboard to manage crop information dynamically.
+              </p>
+              <button
+                onClick={() => window.location.href = '/'}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${isDark
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import UserManagement from '../components/UserManagement';
+import ServiceManagement from '../components/ServiceManagement';
+import DynamicDatabase from '../components/DynamicDatabase';
 
 interface AdminPageProps {
 	isDark: boolean;
@@ -7,6 +9,8 @@ interface AdminPageProps {
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ isDark, user }) => {
+	const [activeTab, setActiveTab] = useState<'users' | 'services' | 'database'>('users');
+
 	// Only show for admin and super_admin users
 	if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
 		return (
@@ -21,7 +25,45 @@ const AdminPage: React.FC<AdminPageProps> = ({ isDark, user }) => {
 		);
 	}
 
-	return <UserManagement isDark={isDark} user={user} />;
+	return (
+		<div className="space-y-6">
+			{/* Tab Navigation */}
+			<div className="flex border-b border-gray-200 dark:border-gray-700">
+				<button
+					onClick={() => setActiveTab('users')}
+					className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'users'
+						? 'border-blue-500 text-blue-600 dark:text-blue-400'
+						: `border-transparent ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
+						}`}
+				>
+					User Management
+				</button>
+				<button
+					onClick={() => setActiveTab('services')}
+					className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'services'
+						? 'border-blue-500 text-blue-600 dark:text-blue-400'
+						: `border-transparent ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
+						}`}
+				>
+					Service Management
+				</button>
+				<button
+					onClick={() => setActiveTab('database')}
+					className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'database'
+						? 'border-blue-500 text-blue-600 dark:text-blue-400'
+						: `border-transparent ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`
+						}`}
+				>
+					Dynamic Database
+				</button>
+			</div>
+
+			{/* Tab Content */}
+			{activeTab === 'users' && <UserManagement isDark={isDark} user={user} />}
+			{activeTab === 'services' && <ServiceManagement isDark={isDark} user={user} />}
+			{activeTab === 'database' && <DynamicDatabase isDark={isDark} user={user} />}
+		</div>
+	);
 };
 
 export default AdminPage;
