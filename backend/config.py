@@ -43,3 +43,12 @@ LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'huggingface')
 LLM_DEFAULT_MODEL = os.getenv('LLM_DEFAULT_MODEL', 'gpt-5-mini')
 LLM_API_URL = os.getenv('LLM_API_URL', '')
 LLM_API_KEY = os.getenv('LLM_API_KEY', '')
+
+# Email Configuration
+MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', 'False').lower() == 'true'
+MAIL_USERNAME = os.getenv('MAIL_USERNAME', 'thinkincode2025@gmail.com')
+MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', 'fobk fjfw wgqr tqvu')
+MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'thinkincode2025@gmail.com')

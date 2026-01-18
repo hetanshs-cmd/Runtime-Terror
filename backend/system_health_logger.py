@@ -32,9 +32,14 @@ def log_request_metrics(latency_ms, status_code):
         with open(LOG_FILE, "r") as f:
             data = json.load(f)
 
-        # Append new entry and keep only last 5000 entries
+        # Append new entry
         data.append(entry)
-        data = data[-5000:]
+
+        # Filter out entries older than 24 hours and keep only last 5000 entries
+        current_time = time.time()
+        one_day_ago = current_time - (24 * 60 * 60)  # 24 hours in seconds
+        data = [d for d in data if d["timestamp"] > one_day_ago]
+        data = data[-5000:]  # Also limit to last 5000 entries as backup
 
         # Write to temporary file first
         temp_fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(LOG_FILE))

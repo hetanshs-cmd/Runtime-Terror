@@ -269,8 +269,12 @@ class Appointment(db.Model):
     appointment_time = db.Column(db.Time, nullable=False)
     symptoms = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='scheduled')  # scheduled, confirmed, completed, cancelled
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Admin who created it, null for user-created
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship
+    creator = db.relationship('User', backref='created_appointments')
 
     def to_dict(self):
         return {
@@ -285,6 +289,7 @@ class Appointment(db.Model):
             'appointmentTime': self.appointment_time.isoformat() if self.appointment_time else None,
             'symptoms': self.symptoms,
             'status': self.status,
+            'createdBy': self.created_by,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -344,6 +349,37 @@ class Service(db.Model):
             'icon': self.icon,
             'route': self.route,
             'componentName': self.component_name,
+            'isActive': self.is_active,
+            'isBuiltin': self.is_builtin,
+            'createdBy': self.created_by,
+            'createdAt': self.created_at.isoformat() if self.created_at else None,
+            'updatedAt': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class Page(db.Model):
+    __tablename__ = 'pages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    route = db.Column(db.String(200), unique=True, nullable=False)
+    icon = db.Column(db.String(50), default='FileText')
+    is_active = db.Column(db.Boolean, default=True)
+    is_builtin = db.Column(db.Boolean, default=False)  # Built-in pages cannot be deleted
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship with user
+    creator = db.relationship('User', backref='created_pages')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'route': self.route,
+            'icon': self.icon,
             'isActive': self.is_active,
             'isBuiltin': self.is_builtin,
             'createdBy': self.created_by,

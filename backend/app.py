@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from flask_session import Session
+from flask_mail import Mail, Message
 import bcrypt
 import jwt
 import json
@@ -8,6 +9,9 @@ import os
 from datetime import datetime, timedelta, timezone
 import re
 import logging
+import logging.handlers
+import threading
+import time
 from rate_limit import rate_limit
 from scheduler import admit
 from chatbox import get_chatbot_response
@@ -15,13 +19,19 @@ from dynamicDatabase import (
     setup_metadata_table, create_dynamic_database, insert_dynamic_data, 
     fetch_dynamic_data
 )
-from system_health_middleware import register_system_health_middleware
-from system_health_routes import system_health_bp
+from email_utils import (
+    send_appointment_scheduled_email, send_appointment_confirmed_email,
+    send_appointment_cancelled_email, send_appointment_completed_email,
+    send_user_registration_email
+)
 from config import (
     SECRET_KEY, DEBUG, HOST, PORT, SQLALCHEMY_DATABASE_URI,
-    SQLALCHEMY_TRACK_MODIFICATIONS, SESSION_TYPE
+    SQLALCHEMY_TRACK_MODIFICATIONS, SESSION_TYPE, MAIL_SERVER, MAIL_PORT,
+    MAIL_USE_TLS, MAIL_USE_SSL, MAIL_USERNAME, MAIL_PASSWORD, MAIL_DEFAULT_SENDER
 )
-from models import db, User, UserSession, decode_token, get_user_by_token, get_session_by_refresh_token, Hospital, Farmer, Doctor, Appointment, Alert, Service
+from models import db, User, UserSession, decode_token, get_user_by_token, get_session_by_refresh_token, Hospital, Farmer, Doctor, Appointment, Alert, Service, Page
+from system_health_middleware import register_system_health_middleware
+from system_health_routes import system_health_bp
 
 # User Hierarchy and Permissions
 USER_HIERARCHY = {
@@ -115,12 +125,16 @@ def require_auth(f):
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # Enable CORS with credentials
 
-# Configure logging
+# Configure logging with rotation
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
+        logging.handlers.RotatingFileHandler(
+            'app.log',
+            maxBytes=10*1024*1024,  # 10MB per file
+            backupCount=5  # Keep 5 backup files
+        ),
         logging.StreamHandler()
     ]
 )
@@ -131,9 +145,43 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SESSION_TYPE'] = SESSION_TYPE
 
+# Email configuration
+app.config['MAIL_SERVER'] = MAIL_SERVER
+app.config['MAIL_PORT'] = MAIL_PORT
+app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
+app.config['MAIL_USE_SSL'] = MAIL_USE_SSL
+app.config['MAIL_USERNAME'] = MAIL_USERNAME
+app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
+app.config['MAIL_DEFAULT_SENDER'] = MAIL_DEFAULT_SENDER
+
+# Background log cleanup function
+def log_cleanup_worker():
+    """Background worker to periodically clean up old log files"""
+    while True:
+        try:
+            # Import here to avoid circular imports
+            import subprocess
+            import sys
+            # Run log cleanup every 24 hours
+            result = subprocess.run([sys.executable, 'log_cleanup.py'],
+                                  cwd=os.path.dirname(__file__),
+                                  capture_output=True, text=True)
+            if result.returncode == 0 and result.stdout.strip():
+                logging.info(f"Log cleanup: {result.stdout.strip()}")
+        except Exception as e:
+            logging.error(f"Log cleanup failed: {e}")
+        finally:
+            # Sleep for 24 hours
+            time.sleep(24 * 60 * 60)
+
+# Start background log cleanup thread
+cleanup_thread = threading.Thread(target=log_cleanup_worker, daemon=True)
+cleanup_thread.start()
+
 # Initialize extensions
 db.init_app(app)
 Session(app)
+mail = Mail(app)
 
 # Create database tables
 with app.app_context():
@@ -312,6 +360,13 @@ def register():
             'timestamp': datetime.utcnow().isoformat(),
             'ip': request.remote_addr
         }, priority=2)
+
+        # Send welcome email
+        try:
+            send_user_registration_email(user)
+        except Exception as email_error:
+            logging.error(f"Failed to send user registration email: {email_error}")
+            # Don't fail registration if email fails
 
         return jsonify({
             'message': 'Registration successful',
@@ -1220,8 +1275,19 @@ def get_appointments():
 
 @app.route('/appointments', methods=['POST'])
 def create_appointment():
-    """Create a new appointment (anyone can book appointments)"""
+    """Create a new appointment (anyone can book appointments, admins can create on behalf of users)"""
     try:
+        # Check if user is authenticated (optional for public booking)
+        user = None
+        access_token = request.cookies.get('access_token')
+        if not access_token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                access_token = auth_header.split(' ')[1]
+
+        if access_token:
+            user = get_user_by_token(access_token)
+
         data = request.get_json()
         required_fields = ['patientName', 'patientEmail', 'patientPhone', 'hospitalId', 'department', 'appointmentDate', 'appointmentTime']
         if not data or not all(field in data for field in required_fields):
@@ -1275,13 +1341,22 @@ def create_appointment():
             doctor_name=data.get('doctorName'),  # Optional
             appointment_date=appointment_date,
             appointment_time=appointment_time,
-            symptoms=data.get('symptoms')  # Optional
+            symptoms=data.get('symptoms'),  # Optional
+            created_by=user.id if user else None  # Track who created it
         )
 
         db.session.add(appointment)
         db.session.commit()
 
         logging.info(f"Appointment created for {appointment.patient_name} at {hospital.name} on {appointment_date}")
+
+        # Send confirmation email
+        try:
+            send_appointment_scheduled_email(appointment)
+        except Exception as email_error:
+            logging.error(f"Failed to send appointment scheduled email: {email_error}")
+            # Don't fail the appointment creation if email fails
+
         return jsonify({
             'message': 'Appointment scheduled successfully',
             'appointment': appointment.to_dict()
@@ -1324,8 +1399,35 @@ def update_appointment_status(appointment_id):
         if not appointment:
             return jsonify({'error': 'Appointment not found'}), 404
 
+        old_status = appointment.status
         appointment.status = data['status']
         db.session.commit()
+
+        # Send appropriate email based on status change
+        try:
+            if data['status'] == 'confirmed' and old_status != 'confirmed':
+                send_appointment_confirmed_email(appointment)
+            elif data['status'] == 'cancelled' and old_status != 'cancelled':
+                send_appointment_cancelled_email(appointment)
+            elif data['status'] == 'completed' and old_status != 'completed':
+                send_appointment_completed_email(appointment)
+        except Exception as email_error:
+            logging.error(f"Failed to send appointment status update email: {email_error}")
+            # Don't fail the status update if email fails
+
+        # Create notification if appointment is confirmed
+        if data['status'] == 'confirmed' and old_status != 'confirmed':
+            # Create an alert notification for the user
+            notification = Alert(
+                type='Healthcare',
+                message=f'Your appointment at {appointment.department} department has been confirmed for {appointment.appointment_date.strftime("%B %d, %Y")} at {appointment.appointment_time.strftime("%I:%M %p")}.',
+                severity='MEDIUM',
+                created_by=user.id
+            )
+            db.session.add(notification)
+            db.session.commit()
+
+            logging.info(f"Notification created for confirmed appointment {appointment_id}")
 
         logging.info(f"Appointment {appointment_id} status updated to {data['status']} by {user.username}")
         return jsonify({
@@ -2021,18 +2123,191 @@ def delete_dynamic_table_data(user, table_name, record_id):
         logging.error(f"Error deleting data: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+# Full Page Management Endpoints (Super Admin Only)
+@app.route('/admin/pages', methods=['POST'])
+@require_auth
+def create_page(user):
+    """Create a new full page (super_admin only)"""
+    try:
+        # Only super_admin can create pages
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+
+        required_fields = ['title', 'route']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': f'Required fields: {", ".join(required_fields)}'}), 400
+
+        # Validate route format (should start with /)
+        if not data['route'].startswith('/'):
+            return jsonify({'error': 'Route must start with /'}), 400
+
+        # Check if route already exists
+        existing_page = Page.query.filter_by(route=data['route']).first()
+        if existing_page:
+            return jsonify({'error': 'Page with this route already exists'}), 409
+
+        # Create new page
+        new_page = Page(
+            title=data['title'].strip(),
+            description=data.get('description', '').strip(),
+            route=data['route'].strip(),
+            icon=data.get('icon', 'FileText').strip(),
+            is_active=data.get('isActive', True),
+            is_builtin=False,  # User-created pages are not built-in
+            created_by=user.id
+        )
+
+        db.session.add(new_page)
+        db.session.commit()
+
+        logging.info(f"Page '{new_page.title}' created by {user.username}")
+        return jsonify(new_page.to_dict()), 201
+
+    except Exception as e:
+        logging.error(f"Error creating page: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/pages', methods=['GET'])
+@require_auth
+def get_pages(user):
+    """Get all pages (admin and super_admin only)"""
+    try:
+        # Only admin and super_admin can view pages
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+
+        pages = Page.query.filter_by(is_active=True).order_by(Page.created_at.desc()).all()
+        return jsonify([page.to_dict() for page in pages]), 200
+
+    except Exception as e:
+        logging.error(f"Error getting pages: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/pages/<int:page_id>', methods=['GET'])
+@require_auth
+def get_page(user, page_id):
+    """Get a specific page (admin and super_admin only)"""
+    try:
+        # Only admin and super_admin can view pages
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+
+        page = Page.query.get(page_id)
+        if not page:
+            return jsonify({'error': 'Page not found'}), 404
+
+        return jsonify(page.to_dict()), 200
+
+    except Exception as e:
+        logging.error(f"Error getting page: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/pages/<int:page_id>', methods=['PUT'])
+@require_auth
+def update_page(user, page_id):
+    """Update a page (super_admin only)"""
+    try:
+        # Only super_admin can update pages
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+
+        page = Page.query.get(page_id)
+        if not page:
+            return jsonify({'error': 'Page not found'}), 404
+
+        # Cannot modify built-in pages
+        if page.is_builtin:
+            return jsonify({'error': 'Cannot modify built-in pages'}), 403
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+
+        # Validate required fields if provided
+        if 'title' in data and not data['title'].strip():
+            return jsonify({'error': 'Title cannot be empty'}), 400
+        if 'route' in data:
+            if not data['route'].strip():
+                return jsonify({'error': 'Route cannot be empty'}), 400
+            if not data['route'].startswith('/'):
+                return jsonify({'error': 'Route must start with /'}), 400
+            # Check if route already exists (excluding current page)
+            existing_page = Page.query.filter_by(route=data['route']).filter(Page.id != page_id).first()
+            if existing_page:
+                return jsonify({'error': 'Page with this route already exists'}), 409
+
+        # Update page fields
+        if 'title' in data:
+            page.title = data['title'].strip()
+        if 'description' in data:
+            page.description = data.get('description', '').strip()
+        if 'route' in data:
+            page.route = data['route'].strip()
+        if 'icon' in data:
+            page.icon = data.get('icon', 'FileText').strip()
+        if 'isActive' in data:
+            page.is_active = data['isActive']
+
+        db.session.commit()
+
+        logging.info(f"Page '{page.title}' updated by {user.username}")
+        return jsonify(page.to_dict()), 200
+
+    except Exception as e:
+        logging.error(f"Error updating page: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/pages/<int:page_id>', methods=['DELETE'])
+@require_auth
+def delete_page(user, page_id):
+    """Delete a page (super_admin only)"""
+    try:
+        # Only super_admin can delete pages
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+
+        page = Page.query.get(page_id)
+        if not page:
+            return jsonify({'error': 'Page not found'}), 404
+
+        # Cannot delete built-in pages
+        if page.is_builtin:
+            return jsonify({'error': 'Cannot delete built-in pages'}), 403
+
+        # Delete the page
+        db.session.delete(page)
+        db.session.commit()
+
+        logging.info(f"Page '{page.title}' deleted by {user.username}")
+        return jsonify({'message': 'Page deleted successfully'}), 200
+
+    except Exception as e:
+        logging.error(f"Error deleting page: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+
 # Alert Management Endpoints
 @app.route('/alerts', methods=['GET'])
-@require_auth
-def get_alerts(user):
-    """Get all active alerts"""
+def get_alerts():
+    """Get all active alerts (public access for dashboard display)"""
     try:
+        # Allow public access to alerts for dashboard display
+        # But still apply rate limiting based on IP
+        user_id = request.remote_addr
+        rate_limit(user_id)
+
         alerts = Alert.query.filter_by(is_active=True).order_by(Alert.created_at.desc()).all()
-        
+
         return jsonify({
             'alerts': [alert.to_dict() for alert in alerts]
         }), 200
-    
+
     except Exception as e:
         logging.error(f"Error getting alerts: {e}")
         return jsonify({'error': 'Internal server error'}), 500
@@ -2383,6 +2658,13 @@ if __name__ == '__main__':
     print("GET /admin/dynamic/tables/<table_name>/metadata")
     print("POST /admin/dynamic/tables/<table_name>/data")
     print("GET /admin/dynamic/tables/<table_name>/data")
+    
+    # Full Page Management Endpoints (Super Admin Only)
+    print("POST /admin/pages")
+    print("GET /admin/pages")
+    print("GET /admin/pages/<page_id>")
+    print("PUT /admin/pages/<page_id>")
+    print("DELETE /admin/pages/<page_id>")
     
     # Alert Endpoints
     print("GET /alerts")

@@ -8,3 +8,4 @@ PyJWT==2.6.0
 redis==4.5.5
 mysql-connector-python==8.0.33
 Flask-Session==0.4.1
+Flask-Mail==0.9.1
