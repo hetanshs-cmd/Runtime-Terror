@@ -66,16 +66,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, 
     menuItems.splice(5, 0, { id: 'custom-dashboard', path: '/custom-dashboard', icon: LayoutDashboard, label: 'Custom Dashboard' });
   }
 
-  // Add hospital registration for healthcare admin, admin, and super admin only
-  if (user && (user.role === 'healthcare_admin' || user.role === 'admin' || user.role === 'super_admin')) {
-    menuItems.splice(2, 0, { id: 'hospital-registration', path: '/hospital-registration', icon: Building2, label: 'Register Hospital' });
-  }
-
-  // Add farmer registration for agriculture admin, admin, and super admin only
-  if (user && (user.role === 'agriculture_admin' || user.role === 'admin' || user.role === 'super_admin')) {
-    menuItems.splice(3, 0, { id: 'farmer-registration', path: '/farmer-registration', icon: Sprout, label: 'Register Farmer' });
-  }
-
   // Add dynamic sections
   if (dynamicSections && dynamicSections.length > 0) {
     dynamicSections.forEach((section, index) => {

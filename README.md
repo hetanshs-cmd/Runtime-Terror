@@ -24,7 +24,7 @@
 
 ## Project Overview
 
-GovConnect is a comprehensive government infrastructure monitoring and management platform that provides real-time insights across multiple sectors including healthcare, agriculture, and urban infrastructure. The platform features role-based access control, secure authentication, an intuitive dashboard for government officials to monitor and manage critical infrastructure services, and an AI-powered assistant for enhanced decision-making and system queries.
+GovConnect is a comprehensive government infrastructure monitoring and management platform that provides real-time insights across multiple sectors including healthcare and agriculture. The platform features role-based access control, secure authentication, an intuitive dashboard for government officials to monitor and manage critical infrastructure services, and an AI-powered assistant for enhanced decision-making and system queries.
 
 ---
 
@@ -36,7 +36,6 @@ GovConnect is a comprehensive government infrastructure monitoring and managemen
 - 📊 **Real-time Dashboard**: Infrastructure monitoring across multiple sectors with live metrics
 - 🏥 **Healthcare Sector**: Hospital management, appointment booking, and health metrics monitoring
 - 🌾 **Agriculture Sector**: Farmer registration, crop monitoring, and yield analytics
-- 🏙️ **Urban Infrastructure**: Traffic monitoring and utility service management
 - 🚨 **Alert System**: Real-time notifications and critical status updates for administrators with live top-nav alerts
 - 🤖 **AI Assistant**: GPT-5 mini powered chat assistant for system queries and support (authenticated users only)
 - 📱 **Responsive Design**: Fully responsive interface that works on desktop and mobile devices

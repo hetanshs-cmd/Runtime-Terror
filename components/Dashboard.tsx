@@ -203,7 +203,17 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true, isCustom = false, 
     const storageKey = pageId ? `page_${pageId}_sections` : (isCustom ? 'custom_dashboard_sections' : 'dynamic_sections');
     const saved = localStorage.getItem(storageKey);
     if (saved) {
-      setDynamicSections(JSON.parse(saved));
+      let sections = JSON.parse(saved);
+      // Filter out any sections containing "urban" references
+      sections = sections.filter((section: DynamicSection) => {
+        const titleLower = section.title?.toLowerCase() || '';
+        const descriptionLower = section.description?.toLowerCase() || '';
+        const tableNameLower = section.table_name?.toLowerCase() || '';
+        return !titleLower.includes('urban') && !descriptionLower.includes('urban') && !tableNameLower.includes('urban');
+      });
+      setDynamicSections(sections);
+      // Update localStorage with filtered sections
+      localStorage.setItem(storageKey, JSON.stringify(sections));
     }
     loadKPIStats();
   }, [isCustom, pageId]);

@@ -4,17 +4,16 @@ import Sidebar from './Sidebar';
 import TopNav from './TopNav';
 import HomePage from '../pages/HomePage';
 import HealthcarePage from '../pages/HealthcarePage';
-import AgriculturePage from '../pages/AgriculturePage';
 import AlertsPage from '../pages/AlertsPage';
 import SystemHealthPage from '../pages/SystemHealthPage';
 import AdminPage from '../pages/AdminPage';
-import HospitalRegistrationPage from '../pages/HospitalRegistrationPage';
 import FarmerRegistrationPage from '../pages/FarmerRegistrationPage';
 import CustomDashboardPage from '../pages/CustomDashboardPage';
 import Settings from './Settings';
 import ChatBox from './ChatBox';
 import DynamicSectionPage from './DynamicSectionPage';
 import MainNavigationTabPage from './MainNavigationTabPage';
+import DynamicPage from './DynamicPage';
 
 interface LayoutProps {
   isDark: boolean;
@@ -34,7 +33,17 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
     const loadSections = () => {
       const saved = localStorage.getItem('dynamic_full_sections');
       if (saved) {
-        setDynamicSections(JSON.parse(saved));
+        let sections = JSON.parse(saved);
+        // Filter out any sections containing "urban" references
+        sections = sections.filter((section: any) => {
+          const titleLower = section.title?.toLowerCase() || '';
+          const descriptionLower = section.description?.toLowerCase() || '';
+          const tableNameLower = section.table_name?.toLowerCase() || '';
+          return !titleLower.includes('urban') && !descriptionLower.includes('urban') && !tableNameLower.includes('urban');
+        });
+        setDynamicSections(sections);
+        // Update localStorage with filtered sections
+        localStorage.setItem('dynamic_full_sections', JSON.stringify(sections));
       }
     };
 
@@ -128,13 +137,11 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
             <Routes>
               <Route path="/" element={<HomePage isDark={isDark} user={user} />} />
               <Route path="/healthcare" element={<HealthcarePage isDark={isDark} user={user} />} />
-              <Route path="/agriculture" element={<AgriculturePage isDark={isDark} user={user} />} />
+              <Route path="/agriculture" element={<FarmerRegistrationPage isDark={isDark} user={user} />} />
               <Route path="/alerts" element={<AlertsPage isDark={isDark} />} />
               <Route path="/system-health" element={<SystemHealthPage isDark={isDark} />} />
               <Route path="/custom-dashboard" element={<CustomDashboardPage isDark={isDark} user={user} />} />
               <Route path="/admin" element={<AdminPage isDark={isDark} user={user} />} />
-              <Route path="/hospital-registration" element={<HospitalRegistrationPage isDark={isDark} user={user} />} />
-              <Route path="/farmer-registration" element={<FarmerRegistrationPage isDark={isDark} user={user} />} />
               <Route path="/settings" element={<Settings isDark={isDark} />} />
               {/* Dynamic Routes */}
               {dynamicSections.map((section) => (

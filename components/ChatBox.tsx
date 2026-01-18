@@ -18,7 +18,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isDark }) => {
 	const [messages, setMessages] = useState<Message[]>([
 		{
 			id: '1',
-			text: 'Hey there! 👋 I\'m GovConnect Assistant, your friendly guide to government services. I\'m here to help with healthcare, agriculture, and urban services. What can I help you with today?',
+			text: 'Hey there! 👋 I\'m GovConnect Assistant, your friendly guide to government services. I\'m here to help with healthcare, agriculture, and system administration. What can I help you with today?',
 			sender: 'bot',
 			timestamp: new Date(),
 			status: 'sent'

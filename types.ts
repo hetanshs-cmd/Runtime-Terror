@@ -30,7 +30,7 @@ export interface ServiceHealth {
 
 export interface Alert {
   id: string;
-  domain: 'Healthcare' | 'Agriculture' | 'Urban' | 'System';
+  domain: 'Healthcare' | 'Agriculture' | 'System';
   message: string;
   severity: AlertSeverity;
   timestamp: string;

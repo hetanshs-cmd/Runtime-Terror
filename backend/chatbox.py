@@ -57,13 +57,7 @@ SERVICES AVAILABLE:
    - Irrigation scheduling and water management
    - Agricultural subsidies and scheme information
 
-3. URBAN SERVICES:
-   - Report civic issues (roads, water, electricity)
-   - Track complaint status and resolution
-   - Access municipal services and information
-   - View infrastructure health metrics
-
-4. SYSTEM FEATURES:
+3. SYSTEM FEATURES:
    - Real-time alerts and notifications
    - Dynamic database management for admins
    - User role management (Super Admin, Healthcare Admin, Agriculture Admin)
@@ -244,7 +238,7 @@ def is_out_of_scope(user_message: str) -> bool:
     # If it contains question words and no government-related keywords, likely out of scope
     question_words = ["what", "how", "why", "when", "where", "who", "which", "can you"]
     gov_keywords = ["health", "medical", "hospital", "doctor", "farm", "agriculture", "farmer", "crop",
-                   "urban", "civic", "complaint", "infrastructure", "admin", "system", "api", "government", "gov"]
+                   "civic", "complaint", "infrastructure", "admin", "system", "api", "government", "gov"]
 
     has_question = any(word in user_msg for word in question_words)
     has_gov_topic = any(word in user_msg for word in gov_keywords)
@@ -260,7 +254,7 @@ def get_enhanced_rule_response(user_message: str, user_id: str = "default") -> s
 
     # Check if query is out of scope first
     if is_out_of_scope(user_message):
-        return "I'm sorry, but I'm specifically designed to help with government services through GovConnect. I can assist with healthcare appointments, agriculture services, urban complaints, and system administration. For other topics, you might want to check with specialized services or search engines. Is there anything government-related I can help you with instead?"
+        return "I'm sorry, but I'm specifically designed to help with government services through GovConnect. I can assist with healthcare appointments, agriculture services, and system administration. For other topics, you might want to check with specialized services or search engines. Is there anything government-related I can help you with instead?"
 
     # Healthcare queries
     if any(word in user_msg for word in ["healthcare", "doctor", "appointment", "medical", "hospital", "health"]):
@@ -282,13 +276,6 @@ def get_enhanced_rule_response(user_message: str, user_id: str = "default") -> s
         else:
             return "Agriculture services are fantastic here! We've got farmer registration, weather forecasts, crop monitoring, and irrigation help. What farming question can I help you with today?"
 
-    # Urban services queries
-    elif any(word in user_msg for word in ["urban", "civic", "complaint", "roads", "water", "electricity", "infrastructure"]):
-        if "complaint" in user_msg or "report" in user_msg:
-            return "Got a civic issue? No problem! Use the Urban Services section to report problems with roads, water, electricity, or anything else. You can track your complaint status too. What issue are you dealing with?"
-        else:
-            return "Urban services are all about keeping our cities running smoothly! You can report issues and check infrastructure status. Head to the Urban Services page - I'm here if you need help navigating it."
-
     # Admin queries
     elif any(word in user_msg for word in ["admin", "manage", "create", "delete", "update"]):
         if "alert" in user_msg:
@@ -304,14 +291,14 @@ def get_enhanced_rule_response(user_message: str, user_id: str = "default") -> s
 
     # General assistance
     elif any(word in user_msg for word in ["help", "how", "what", "guide"]):
-        return "I'm your friendly helper! I can guide you through healthcare appointments, agriculture services, urban complaints, and using the platform. Try asking me about 'booking an appointment', 'farmer registration', or 'reporting a complaint'. What's on your mind?"
+        return "I'm your friendly helper! I can guide you through healthcare appointments, agriculture services, and using the platform. Try asking me about 'booking an appointment', 'farmer registration', or 'reporting a complaint'. What's on your mind?"
 
     # Greeting responses
     elif any(word in user_msg for word in ["hello", "hi", "hey", "good"]):
-        return "Hey there! 👋 I'm GovConnect Assistant, your friendly guide to government services. I help with healthcare, agriculture, and urban services. What can I help you with today?"
+        return "Hey there! 👋 I'm GovConnect Assistant, your friendly guide to government services. I help with healthcare, agriculture, and system administration. What can I help you with today?"
 
     # Default response
     else:
-        return "Hi! I'm here to help with all things GovConnect - healthcare, agriculture, and urban services. Could you tell me a bit more about what you need? For example, are you looking to book an appointment, register as a farmer, or report an issue?"
+        return "Hi! I'm here to help with all things GovConnect - healthcare, agriculture, and system administration. Could you tell me a bit more about what you need? For example, are you looking to book an appointment, register as a farmer, or check system status?"
 
 

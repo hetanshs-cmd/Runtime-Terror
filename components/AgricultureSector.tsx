@@ -99,7 +99,14 @@ const AgricultureSector: React.FC<AgricultureSectorProps> = ({ isDark = true, us
       try {
         // Try to load from dynamic table for crop data
         // Look for sections with title containing "crop" or table name containing "crop"
-        const sections = JSON.parse(localStorage.getItem('dynamic_sections') || '[]');
+        let sections = JSON.parse(localStorage.getItem('dynamic_sections') || '[]');
+        // Filter out any sections containing "urban" references
+        sections = sections.filter((section: any) => {
+          const titleLower = section.title?.toLowerCase() || '';
+          const descriptionLower = section.description?.toLowerCase() || '';
+          const tableNameLower = section.table_name?.toLowerCase() || '';
+          return !titleLower.includes('urban') && !descriptionLower.includes('urban') && !tableNameLower.includes('urban');
+        });
         const cropSection = sections.find((s: any) =>
           s.title.toLowerCase().includes('crop') ||
           (s.table_name && s.table_name.includes('crop'))

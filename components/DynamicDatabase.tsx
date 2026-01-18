@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Database, Table, Eye, EyeOff, Save, RefreshCw } from 'lucide-react';
+import { Plus, Database, Table, Eye, EyeOff, Save, RefreshCw, Trash2 } from 'lucide-react';
 
 interface DynamicDatabaseProps {
 	isDark: boolean;
@@ -40,6 +40,13 @@ const DynamicDatabase: React.FC<DynamicDatabaseProps> = ({ isDark, user }) => {
 	const [insertData, setInsertData] = useState<Record<string, any>>({});
 
 	const API_BASE_URL = '/api';
+
+	// Handle table selection
+	const handleTableSelect = (tableName: string) => {
+		setSelectedTable(tableName);
+		fetchTableMetadata(tableName);
+		fetchTableData(tableName);
+	};
 
 	// Get auth token - not needed since we use cookies
 	// const getAuthToken = () => {
